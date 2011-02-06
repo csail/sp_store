@@ -18,7 +18,7 @@ module Store
   # Args:
   #   block_id:: the 0-based number of the block to be read
   #
-  # Returns a string of block_size bytes
+  # Returns a string of block_size bytes.
   def read_block(block_id)
     
   end

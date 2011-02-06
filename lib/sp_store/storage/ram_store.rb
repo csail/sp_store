@@ -1,9 +1,9 @@
 # :nodoc: namespace
-module SpStore::Models
+module SpStore::Storage
   
 # Memory-backed block store implementation.
 class RamStore
-  # Creates a new block store model.
+  # Creates a new block store with zeroed out blocks.
   #
   # Args:
   #   block_size:: the application-desired block size, in bytes
@@ -33,17 +33,19 @@ class RamStore
   attr_reader :block_size
 
   # :nodoc
-  def read_block_without_checks(block_id)
+  def read_block_unchecked(block_id)
     @block_data[block_id].dup
   end
-  private :read_block_without_checks
+  private :read_block_unchecked
   
   # :nodoc
-  def write_block_without_checks(block, data)
+  def write_block_unchecked(block_id, data)
     raise "Wrong data buffer size" if data.length != block_size
     @block_data[block_id] = data.dup
   end
-  private :write_block_without_checks
+  private :write_block_unchecked
+  
+  include SpStore::Storage::StoreCallChecker
 end
   
-end  # namespace SpStore::Models
+end  # namespace SpStore::Storage

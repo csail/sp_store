@@ -4,7 +4,7 @@ shared_examples_for 'a block in a block store' do
     block_data.length.should == @store.block_size
   end
   it 'should be zeroed out initially' do
-    block_data.should == ?\0 * block_data.length
+    block_data.should == "\0" * block_data.length
   end
   it 'should retain data' do
     @store.write_block block_number, test_pattern
@@ -18,12 +18,13 @@ end
 
 shared_examples_for 'a block store' do
   it 'should have a positive number of blocks' do
-    @store.blocks.should_be > 0
+    @store.blocks.should > 0
   end
   
   it 'should have a power-of-2 block size' do
-    @store.block_size.should_be > 0
-    @store.block_size.should == 2 ** Math.log(@store.block_size).to_i
+    @store.block_size.should > 0
+    @store.block_size.should ==
+        2 ** (Math.log(@store.block_size) / Math.log(2)).to_i
   end
   
   describe 'first block' do
