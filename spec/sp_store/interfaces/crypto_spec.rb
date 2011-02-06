@@ -109,9 +109,9 @@ describe SpStore::Crypto do
       SpStore::Crypto.verify_cert(cert, [ca2_cert]).should be_false
     end
     
+    let(:saved_cert) { SpStore::Crypto.save_cert cert }
     it 'should load a saved certificate' do
-      SpStore::Crypto.load_cert(SpStore::Crypto.save_cert(cert)).inspect.
-          should == cert.inspect
+      SpStore::Crypto.load_cert(saved_cert).inspect.should == cert.inspect
     end
   end
 end

@@ -1,5 +1,5 @@
 # :nodoc: namespace
-module SpStore::Storage
+module SpStore::Mocks
   
 # Memory-backed block store implementation.
 class RamStore
@@ -46,6 +46,6 @@ class RamStore
   private :write_block_unchecked
   
   include SpStore::Storage::StoreCallChecker
-end  # class SpStore::Storage::RamStore
+end  # class SpStore::Mocks::RamStore
   
-end  # namespace SpStore::Storage
+end  # namespace SpStore::Mocks
