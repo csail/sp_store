@@ -46,6 +46,6 @@ class RamStore
   private :write_block_unchecked
   
   include SpStore::Storage::StoreCallChecker
-end
+end  # class SpStore::Storage::RamStore
   
 end  # namespace SpStore::Storage

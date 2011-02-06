@@ -33,6 +33,6 @@ module Store
   def write_block(block_id, data)
     
   end
-end
+end  # class SpStore::Store
 
 end  # namespace SpStore
