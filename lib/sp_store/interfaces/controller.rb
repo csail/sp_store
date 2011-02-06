@@ -11,14 +11,11 @@ class Controller
   # Establishes a communication session between the store and one of its users.
   #
   # Args:
-  #   nonce:: short random string that prevents replay attacks
   #   encrypted_session_key:: the session HMAC key, encrypted under the server's
   #                           public Endorsement Key
   #
-  # Returns a Hash with the following keys:
-  #   :nonce_hmac:: proof from the FPGA that the session was acknowledged
-  #   :session:: a Server::Session object
-  def session(nonce, encrypted_session_key)
+  # Returns a Session.
+  def session(encrypted_session_key)
     
   end
 end  # class SpStore::Mocks::BareController
