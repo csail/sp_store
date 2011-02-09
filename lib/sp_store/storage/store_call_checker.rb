@@ -11,13 +11,10 @@ module StoreCallChecker
     read_block_unchecked block_id
   end
 
-  # Writes a block to the store.
+  # Calls write_block_unchecked if block_id and data are valid.
   #
-  # Args:
-  #   block_id:: the 0-based number of the block to be written
-  #   data:: a string of block_size bytes to be stored in the block
-  #
-  # Returns the store.
+  # Raises an IllegalArgumentException if block_id is invalid or data has the
+  # wrong size.
   def write_block(block_id, data)
     _check_block_id block_id
     _check_block_data data

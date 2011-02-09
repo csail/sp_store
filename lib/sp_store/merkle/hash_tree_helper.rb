@@ -19,6 +19,8 @@ module HashTreeHelper
   def [](leaf_id)
     node_hash leaf_node_id(leaf_id)
   end
+  # The alernate method name below is used if HashTreeCallChecker is included.
+  alias_method :leaf_hash_unchecked, :[]
   
   # The hash stored in the root node, which is a summary for the entire tree.
   def root_hash
@@ -37,13 +39,16 @@ module HashTreeHelper
     #       equal to the tree's capacity (number of leaves)
     capacity + leaf_id
   end
+end
 
+# :nodoc: implementatin helpers
+module HashTreeHelper
   # True if a node ID corresponds to a leaf node.
   #
   # Args:
   #   node_id:: a node ID
   def leaf_node?(node_id)
-    capacity < node_id
+    capacity <= node_id
   end
   
   # The set of nodes needed to update or verify the value of a leaf.

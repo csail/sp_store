@@ -22,7 +22,7 @@ class BareHashTree
     @capacity
   end
 
-  def []=(leaf_id, new_value)
+  def update_unchecked(leaf_id, new_value)
     start_node_id = leaf_node_id leaf_id
     @nodes[start_node_id] = new_value
     visit_path_to_root start_node_id do |node_id|
@@ -31,11 +31,12 @@ class BareHashTree
     self
   end
 
-  def node_hash(node_id)
+  def node_hash_unchecked(node_id)
     @nodes[node_id]
   end
   
   include SpStore::Merkle::HashTreeHelper
-end  # class SpStore::Mocks::RamStore
+  include SpStore::Merkle::HashTreeCallChecker
+end  # class SpStore::Mocks::BareHashTree
   
 end  # namespace SpStore::Mocks

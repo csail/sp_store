@@ -7,6 +7,7 @@ require 'sp_store/interfaces/crypto.rb'
 require 'sp_store/interfaces/hash_tree.rb'
 require 'sp_store/interfaces/store.rb'
 
+require 'sp_store/merkle/hash_tree_call_checker.rb'
 require 'sp_store/merkle/hash_tree_helper.rb'
 
 require 'sp_store/storage/store_call_checker.rb'

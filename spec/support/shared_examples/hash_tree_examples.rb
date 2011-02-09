@@ -1,3 +1,38 @@
+shared_examples_for 'a leaf' do
+  describe 'update' do
+    before do
+      @old_root_hash = root_hash
+      @old_hash = leaf_hash
+      @new_hash = leaf_hash.reverse
+      @tree[leaf_id] = @new_hash
+    end
+    after do
+      @tree[leaf_id] = @old_hash
+    end
+    it 'should change the root hash' do
+      root_hash.should_not == @old_root_hash
+    end
+    
+    it 'should change the updated leaf' do
+      leaf_hash.should == @new_hash
+    end
+    
+    describe 'and reverted update' do
+      before { @tree[leaf_id] = @old_hash }
+      after { @tree[leaf_id] = @new_hash }
+
+      it 'should have the initial root hash' do
+        root_hash.should == @old_root_hash
+      end
+    end
+  end
+  
+  # Duplicates HashTreeHelper functionality.
+  def leaf_hash
+    @tree.node_hash(@tree.capacity + leaf_id)
+  end
+end
+
 # NOTE: this spec covers the HashTree interface, so it doesn't use the methods
 #       in HashTreeHelper.
 shared_examples_for 'a hash tree' do
@@ -20,36 +55,26 @@ shared_examples_for 'a hash tree' do
       root_hash.should == SpStore::Crypto.hash_for_tree_node(1,
           @tree.node_hash(2), @tree.node_hash(3))
     end
-    
-    it 'should be the same for the same values in leaves' do
-      old_root_hash = root_hash
-      @tree[0] = first_leaf.reverse
-      @tree[0] = first_leaf.reverse
-      root_hash.should == old_root_hash
-    end
   end
   
-  describe 'updating' do
-    it 'should change the root hash' do
-      old_root_hash = root_hash
-      @tree[0] = first_leaf.reverse
-      root_hash.should_not == old_root_hash
-    end
-    
-    it 'should change the updated leaf' do
-      new_leaf = first_leaf.reverse
-      @tree[0] = new_leaf
-      first_leaf.should == new_leaf
-    end
+  describe 'first leaf' do
+    let(:leaf_id) { 0 }
+    it_should_behave_like 'a leaf'
   end
 
+  describe 'last leaf' do
+    let(:leaf_id) { @tree.capacity - 1 }
+    it_should_behave_like 'a leaf'
+  end
+  
+  
+  describe 'a leaf in the middle' do
+    let(:leaf_id) { @tree.capacity / 2 }
+    it_should_behave_like 'a leaf'    
+  end
+    
   # Duplicates HashTreeHelper functionality.
   def root_hash
     @tree.node_hash(1)
-  end
-  
-  # Duplicates HashTreeHelper functionality.
-  def first_leaf
-    @tree.node_hash(@tree.capacity)
   end
 end
