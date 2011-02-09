@@ -75,9 +75,14 @@ module Crypto
     OpenSSL::HMAC.digest ossl_crypto_hash, key, data
   end
 
-  # Computes a cryptographic hash of the given data.
+  # Cryptographic (hard to reverse) hash of the given data.
   def self.crypto_hash(data)
     ossl_crypto_hash.digest data
+  end
+
+  # Content of an inner node in an integrity-checking hash tree.
+  def self.hash_for_tree_node(node_id, left_child_hash, right_child_hash)
+    crypto_hash [[node_id].pack('N'), left_child_hash, right_child_hash].join
   end
   
   # Creates a symmetric encryption key.
