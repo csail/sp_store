@@ -37,6 +37,14 @@ module HashTreeHelper
     #       equal to the tree's capacity (number of leaves)
     capacity + leaf_id
   end
+
+  # True if a node ID corresponds to a leaf node.
+  #
+  # Args:
+  #   node_id:: a node ID
+  def leaf_node?(node_id)
+    capacity < node_id
+  end
   
   # The set of nodes needed to update or verify the value of a leaf.
   def leaf_update_path(leaf_id)
@@ -46,21 +54,6 @@ module HashTreeHelper
       node_ids << sibling(node_id) unless node_id == root_node_id
     end
     node_ids
-  end
-  
-  # Yields the IDs of the nodes on the path from a leaf to the root.
-  #
-  # Args:
-  #   leaf_id:: the leaf starting the path
-  #
-  # Returns self.
-  def visit_path_to_root(leaf_id)
-    node_id = leaf_node_id leaf_id
-    while node_id > 0
-      yield node_id
-      node_id = parent node_id
-    end
-    self
   end
   
   # The content of an internal tree node, assuming its children are correct.
@@ -82,7 +75,9 @@ module ClassMethods
   #
   # The method rounds up its argument to the nearest power of two.
   def full_tree_leaf_count(min_capacity)
-    count = 1
+    # NOTE: a tree has at least one internal node (the root), so we want at
+    #       least two leaves
+    count = 2
     count *= 2 while count < min_capacity
     count
   end
@@ -134,6 +129,20 @@ module ClassMethods
   # True if the node is the right child of its parent.
   def right_child?(node_id)
     (node_id & 1) == 1  # node_id % 2 == 1
+  end
+
+  # Yields the IDs of the nodes on the path from a leaf to the root.
+  #
+  # Args:
+  #   leaf_id:: the leaf starting the path
+  #
+  # Returns self.
+  def visit_path_to_root(node_id)
+    while node_id > 0
+      yield node_id
+      node_id = parent node_id
+    end
+    self
   end
 end  # module SpStore::Merkle::HashTreeHelper::ClassMethods
 

@@ -9,9 +9,9 @@ class BareHashTree
   #   min_capacity:: the minimum number of leaf nodes in the tree
   #   leaf_content:: the initial content of the tree leaves
   def initialize(min_capacity, leaf_content)
-    @capacity = full_tree_leaf_count(min_leaf_count)
+    @capacity = full_tree_leaf_count min_capacity
     
-    @nodes = Array.new full_tree_node_count(min_leaf_count) + 1
+    @nodes = Array.new full_tree_node_count(min_capacity) + 1
     0.upto(@capacity - 1) { |i| @nodes[leaf_node_id(i)] = leaf_content.dup }
     (@capacity - 1).downto(1) do |node_id|
       @nodes[node_id] = correct_node_hash node_id
@@ -23,11 +23,10 @@ class BareHashTree
   end
 
   def []=(leaf_id, new_value)
-    @nodes[leaf_node_id(leaf_id)] = new_value
-    visit_path_to_root leaf_id do |node_id|
-      next if leaf_node?(node_id)
-      
-      @nodes[node_id] = correct_node_hash node_id
+    start_node_id = leaf_node_id leaf_id
+    @nodes[start_node_id] = new_value
+    visit_path_to_root start_node_id do |node_id|
+      @nodes[node_id] = correct_node_hash node_id unless leaf_node?(node_id)
     end
     self
   end
