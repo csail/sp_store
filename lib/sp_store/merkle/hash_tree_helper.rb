@@ -24,7 +24,7 @@ module HashTreeHelper
   
   # The hash stored in the root node, which is a summary for the entire tree.
   def root_hash
-    self[root_node_id]
+    self.node_hash root_node_id
   end
   
   # Node ID for a leaf.
@@ -53,12 +53,7 @@ module HashTreeHelper
   
   # The set of nodes needed to update or verify the value of a leaf.
   def leaf_update_path(leaf_id)
-    node_ids = []
-    visit_path_to_root leaf_id do |node_id|
-      node_ids << node_id
-      node_ids << sibling(node_id) unless node_id == root_node_id
-    end
-    node_ids
+    node_update_path leaf_node_id(leaf_id)
   end
   
   # The content of an internal tree node, assuming its children are correct.
@@ -148,6 +143,19 @@ module ClassMethods
       node_id = parent node_id
     end
     self
+  end
+  
+  # The set of nodes needed to update or verify the value of a leaf.
+  #
+  # Args:
+  #   node_id:: the leaf's node ID (not leaf ID)
+  def node_update_path(node_id)
+    node_ids = []
+    visit_path_to_root node_id do |path_node_id|
+      node_ids << path_node_id
+      node_ids << sibling(path_node_id) unless path_node_id == root_node_id
+    end
+    node_ids
   end
 end  # module SpStore::Merkle::HashTreeHelper::ClassMethods
 

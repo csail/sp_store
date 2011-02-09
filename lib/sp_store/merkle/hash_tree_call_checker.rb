@@ -8,7 +8,7 @@ module HashTreeCallChecker
   # Raises an IllegalArgumentException if leaf_id is invalid.
   def [](leaf_id)
     _check_leaf_id leaf_id
-    leaf_hash_unchecked leaf_id, new_value
+    leaf_hash_unchecked leaf_id
   end
 
   # Calls update_leaf_unchecked if leaf_id is valid.

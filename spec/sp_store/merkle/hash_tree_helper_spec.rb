@@ -184,4 +184,92 @@ describe SpStore::Merkle::HashTreeHelper do
       nodes
     end
   end
+  
+  describe 'node_update_path' do
+    it 'should work for a left path' do
+      klass.node_update_path(64).should ==
+          [64, 65, 32, 33, 16, 17, 8, 9, 4, 5, 2, 3, 1]
+    end
+
+    it 'should work for a right path' do
+      klass.node_update_path(63).should == [63, 62, 31, 30, 15, 14, 7, 6, 3, 2, 1]
+    end
+    
+    it 'should work for a zig-zag path' do
+      klass.node_update_path(1524).should == [1524, 1525, 762, 763, 381, 380,
+          190, 191, 95, 94, 47, 46, 23, 22, 11, 10, 5, 4, 2, 3, 1]
+    end    
+  end
+  
+  describe 'instance methods' do
+    before do
+      @instance = HashTreeHelperWrap.new
+    end
+    
+    describe 'nodes' do
+      it 'should rely on capacity' do
+        @instance.should_receive(:capacity).and_return 1024
+        @instance.nodes.should == 2047
+      end
+    end
+    
+    describe '[]' do
+      it 'should rely on node_hash' do
+        @instance.should_receive(:capacity).and_return 1024
+        @instance.should_receive(:node_hash).with(1025).and_return :node_value
+        @instance[1].should == :node_value
+      end
+    end
+
+    describe 'leaf_hash_unchecked' do
+      it 'should rely on node_hash' do
+        @instance.should_receive(:capacity).and_return 1024
+        @instance.should_receive(:node_hash).with(1025).and_return :node_value
+        @instance.leaf_hash_unchecked(1).should == :node_value
+      end
+    end
+    
+    describe 'root_hash' do
+      it 'should rely on node_hash' do
+        @instance.should_receive(:node_hash).with(1).and_return :node_value        
+        @instance.root_hash.should == :node_value
+      end
+    end
+    
+    describe 'leaf_node_id' do
+      it 'should rely on capacity' do
+        @instance.should_receive(:capacity).and_return 1024
+        @instance.leaf_node_id(1).should == 1025
+      end
+    end
+    
+    describe 'leaf_node?' do
+      it 'should rely on capacity' do
+        @instance.should_receive(:capacity).at_least(:once).and_return 1024
+        @instance.leaf_node?(1).should be_false
+        @instance.leaf_node?(1023).should be_false
+        @instance.leaf_node?(1024).should be_true
+        @instance.leaf_node?(2047).should be_true
+      end
+    end
+    
+    describe 'leaf_update_path' do
+      it 'should rely on node_update_path' do
+        @instance.should_receive(:capacity).and_return 1024
+        @instance.should_receive(:node_update_path).with(1524).and_return :apath
+        @instance.leaf_update_path(500).should == :apath
+      end
+    end
+    
+    describe 'correct_node_hash' do
+      it 'should rely on node_hash' do
+        left_hash = SpStore::Crypto.crypto_hash "2"
+        right_hash = SpStore::Crypto.crypto_hash "3"
+        @instance.should_receive(:node_hash).with(2).and_return left_hash
+        @instance.should_receive(:node_hash).with(3).and_return right_hash
+        @instance.correct_node_hash(1).should ==
+            SpStore::Crypto.hash_for_tree_node(1, left_hash, right_hash)
+      end
+    end
+  end
 end
