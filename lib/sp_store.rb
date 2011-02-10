@@ -14,6 +14,6 @@ require 'sp_store/storage/store_call_checker.rb'
 
 require 'sp_store/mocks.rb'
 require 'sp_store/mocks/bare_controller.rb'
-require 'sp_store/mocks/bare_hash_tree.rb'
 require 'sp_store/mocks/factory_keys.rb'
 require 'sp_store/mocks/ram_store.rb'
+require 'sp_store/mocks/soft_hash_tree.rb'

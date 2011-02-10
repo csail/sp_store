@@ -1,9 +1,9 @@
 require File.expand_path(File.dirname(__FILE__) + '../../../spec_helper')
 
-describe SpStore::Mocks::BareHashTree do
+describe SpStore::Mocks::SoftHashTree do
   let (:leaf_content) { SpStore::Crypto.crypto_hash("\0") }
   before do
-    @tree = SpStore::Mocks::BareHashTree.new 1000, leaf_content
+    @tree = SpStore::Mocks::SoftHashTree.new 1000, leaf_content
   end
     
   it_should_behave_like 'a hash tree'

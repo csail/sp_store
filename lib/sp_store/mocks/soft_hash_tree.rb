@@ -2,7 +2,7 @@
 module SpStore::Mocks
   
 # Integrity-checking hash tree implemented completly in software.
-class BareHashTree
+class SoftHashTree
   # Creates a hash tree where all the leaves have the same value.
   #
   # Args:
@@ -37,6 +37,6 @@ class BareHashTree
   
   include SpStore::Merkle::HashTreeHelper
   include SpStore::Merkle::HashTreeCallChecker
-end  # class SpStore::Mocks::BareHashTree
+end  # class SpStore::Mocks::SoftHashTree
   
 end  # namespace SpStore::Mocks
