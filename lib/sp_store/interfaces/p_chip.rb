@@ -8,6 +8,11 @@ module PChip
     
   end
   
+  # Number of cache lines (entries) in this P chip.
+  def cache_size
+    
+  end
+  
   # The first step of the S-P boot sequence.
   #
   # This method can only be called once, right after the P chip is powered on.
