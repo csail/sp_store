@@ -82,7 +82,7 @@ module Crypto
 
   # Content of an inner node in an integrity-checking hash tree.
   def self.hash_for_tree_node(node_id, left_child_hash, right_child_hash)
-    crypto_hash [[node_id].pack('N'), left_child_hash, right_child_hash].join
+    crypto_hash [left_child_hash, right_child_hash].join
   end
   
   # Creates a symmetric encryption key.

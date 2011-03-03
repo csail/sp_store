@@ -10,6 +10,9 @@ require 'sp_store/interfaces/store.rb'
 require 'sp_store/merkle/hash_tree_call_checker.rb'
 require 'sp_store/merkle/hash_tree_helper.rb'
 
+require 'sp_store/p_chip/interface.rb'
+require 'sp_store/p_chip/session_table.rb'
+
 require 'sp_store/storage/store_call_checker.rb'
 
 require 'sp_store/mocks.rb'
