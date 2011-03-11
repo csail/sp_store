@@ -22,8 +22,13 @@ module Interface
   
   def self.multi_verify_command(checks)
     [1 + checks.length].pack('C') + checks.reverse.map { |check|
-      [check[:right], check[:left], check[:parent]].pack('CSS')
+      [check[:right], check[:left], check[:parent]].pack('SSS')
     }.join
+  end
+  
+  # session_key won't be sent after the session table is up
+  def self.sign_block_command(session_key)
+    [[6].pack('C'), session_key, nonce, [entry].pack('S')].join
   end
   
   def self.one_shot_test_case
