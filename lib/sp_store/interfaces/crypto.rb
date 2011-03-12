@@ -65,14 +65,22 @@ module Crypto
 
   # The HMAC for a data block in an S-P store.
   def self.hmac_for_block(block_number, block_contents, nonce, session_key)
-    hmac_data = [Crypto.crypto_hash(block_contents),
-                 [block_number].pack('N'), nonce].join
-    Crypto.hmac session_key, hmac_data    
+    hmac_for_block_hash block_number, Crypto.crypto_hash(block_contents), nonce,
+                        session_key
+  end
+  
+  # The HMAC for a data block in an S-P store, given its hash.
+  def self.hmac_for_block_hash(block_number, block_hash, nonce, session_key)
+    hmac_data = [nonce, [block_number].pack('N')[1, 3], block_hash].join
+    Crypto.hmac session_key, hmac_data
   end
   
   # The HMAC for some raw data.
   def self.hmac(key, data)
-    OpenSSL::HMAC.digest ossl_crypto_hash, key, data
+    # NOTE: below is the correct implementation; using a weaker version to
+    #       simplify FPGA implementation
+    # OpenSSL::HMAC.digest ossl_crypto_hash, key, data
+    crypto_hash key + data
   end
 
   # Cryptographic (hard to reverse) hash of the given data.

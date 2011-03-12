@@ -27,14 +27,14 @@ module Interface
   end
   
   # session_key won't be sent after the session table is up
-  def self.sign_block_command(session_key, nonce, entry)
+  def self.sign_block_command(entry, nonce, session_key)
     [[6].pack('C'), session_key, nonce, [entry].pack('n')].join
   end
   
   # testcase generation
   def self.debug_cache_line(node_id, node_hash, verified, left, right)
     [[
-      [0xCC].pack('C').unpack('B*').first,
+      "\xCC".unpack('B*').first,
       [node_id].pack('N')[1, 3].unpack('B*').first[3, 21],
       node_hash.unpack('B*').first,
       (verified ? '1' : '0'), (left ? '1' : '0'), (right ? '1' : '0')
@@ -51,13 +51,14 @@ module Interface
     raw = [
       load_root_command(root),
       load_command(2, left, 1, 0),
-      load_command(3, right, 2, 0),
-      verify_command(0, 1, 2),
-      load_command(3, right, 2, 0),
-      verify_command(0, 1, 2),
-      sign_block_command(session_key, nonce, 1),
       load_command(3, wrong, 2, 0),
       verify_command(0, 1, 2),
+      load_root_command(root),
+      load_command(3, right, 2, 0),
+      load_command(2, left, 1, 0),
+      verify_command(0, 1, 2),
+      sign_block_command(1, nonce, session_key),
+      "\xCB" + SpStore::Crypto.hmac_for_block_hash(2, left, nonce, session_key),
       debug_cache_line(1, root, true, true, false),
       debug_cache_line(2, left, true, false, false),
       debug_cache_line(3, wrong, false, false, false)
