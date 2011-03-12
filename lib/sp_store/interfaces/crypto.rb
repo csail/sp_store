@@ -7,7 +7,7 @@ module SpStore
 module Crypto
   # Creates an HMAC key.
   def self.hmac_key
-    OpenSSL::Random.random_bytes ossl_crypto_hash.digest_length
+    OpenSSL::Random.random_bytes 16
   end
     
   # Creates a random string.
