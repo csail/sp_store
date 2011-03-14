@@ -46,8 +46,8 @@ module Interface
     right = SpStore::Crypto.crypto_hash 'right'
     wrong = SpStore::Crypto.crypto_hash 'wrong'
     root = SpStore::Crypto.hash_for_tree_node 1, left, right
-    session_key = SpStore::Crypto.crypto_hash 'session'
-    nonce = SpStore::Crypto.crypto_hash 'nonce_1'
+    session_key = SpStore::Crypto.crypto_hash('session')[0, 16]
+    nonce = SpStore::Crypto.crypto_hash('nonce_1')[0, 16]
     raw = [
       load_root_command(root),
       load_command(2, left, 1, 0),
@@ -59,9 +59,9 @@ module Interface
       verify_command(0, 1, 2),
       sign_block_command(1, nonce, session_key),
       "\xCB" + SpStore::Crypto.hmac_for_block_hash(2, left, nonce, session_key),
-      debug_cache_line(1, root, true, true, false),
+      debug_cache_line(1, root, true, true, true),
       debug_cache_line(2, left, true, false, false),
-      debug_cache_line(3, wrong, false, false, false)
+      debug_cache_line(3, right, true, false, false)
     ]
     max_length = raw.map(&:length).max
     raw.each { |command| command << "\0" * (max_length - command.length) }
