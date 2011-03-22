@@ -12,8 +12,8 @@ module Interface
   end
 
   def self.load_command(node_id, node_hash, entry, previous_parent_entry)
-    [[0].pack('C'), [node_id].pack('N')[1, 3], node_hash,
-     [entry, previous_parent_entry].pack('nn')].join
+    [[0].pack('C'), [entry, previous_parent_entry].pack('nn'),
+     [node_id].pack('N')[1, 3], node_hash].join
   end
   
   def self.verify_command(parent_entry, left_entry, right_entry)
@@ -28,7 +28,7 @@ module Interface
   
   # session_key won't be sent after the session table is up
   def self.sign_block_command(entry, nonce, session_key)
-    [[6].pack('C'), session_key, nonce, [entry].pack('n')].join
+    [[6].pack('C'), [entry].pack('n'), session_key, nonce].join
   end
   
   # testcase generation
