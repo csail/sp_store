@@ -4,7 +4,10 @@ end  # namespace SpStore
 
 require 'sp_store/interfaces/controller.rb'
 require 'sp_store/interfaces/crypto.rb'
+require 'sp_store/interfaces/factory.rb'
 require 'sp_store/interfaces/hash_tree.rb'
+require 'sp_store/interfaces/p_chip.rb'
+require 'sp_store/interfaces/s_chip.rb'
 require 'sp_store/interfaces/store.rb'
 
 require 'sp_store/merkle/hash_tree_call_checker.rb'

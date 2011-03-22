@@ -27,7 +27,7 @@ module PChip
   #
   # Raises:
   #   RuntimeError:: if boot_start was already called
-  #   RuntimeError:: if the HMAC doesn't match the system state (root_hash)
+  #   RuntimeError:: if the PUF syndrome is invalid
   def boot_start(puf_syndrome)
     
   end

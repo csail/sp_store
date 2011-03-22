@@ -7,7 +7,7 @@ module Mocks
 # Software (untrusted) implementation of the P chip.
 class SoftPChip
   
-end  # class SpStore::Mocks::SoftP
+end  # class SpStore::Mocks::SoftPChip
   
 end  # namespace SpStore::Mocks
   
