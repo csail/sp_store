@@ -14,7 +14,12 @@ require 'sp_store/merkle/hash_tree_call_checker.rb'
 require 'sp_store/merkle/hash_tree_helper.rb'
 
 require 'sp_store/p_chip/interface.rb'
-require 'sp_store/p_chip/session_table.rb'
+require 'sp_store/p_chip/soft_boot_logic.rb'
+require 'sp_store/p_chip/soft_node_cache.rb'
+require 'sp_store/p_chip/soft_session_cache.rb'
+
+require 'sp_store/server/controller.rb'
+require 'sp_store/server/session_allocator.rb'
 
 require 'sp_store/storage/store_call_checker.rb'
 

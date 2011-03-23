@@ -3,18 +3,50 @@ module SpStore
   
 # API implemented by a P chip (powerful processor without non-volatile state).
 module PChip
-  # The number of data blocks (hash tree leaves) that supported by this P chip.
-  def capacity
+  # Interface to the P chip's session key cache, which implements SessionCache.
+  def session_cache
     
   end
   
-  # Number of cache lines (entries) in this P chip.
-  def cache_size
+  # Interface to the P chip's boot logic, which implements BootLogic.
+  def boot_logic
+    
+  end
+  
+  # Interface to the P chip's tree node cache, which implements NodeCache.
+  def node_cache
+    
+  end
+  
+  # Computes the hash for a block of data.
+  #
+  # This is the interface to the P chip's data hash block.
+  #
+  # Args:
+  #   data:: the data block to be hashed
+  #
+  # Returns a cryptographic hash of the data block.
+  def hash_block(data)
+    
+  end
+end  # module SpStore::PChip
+
+
+# :nodoc: namespace
+module PChip
+
+# API implemented by the P chip's boot logic module.
+module BootLogic
+  # Resets the P chip to the initial power-up state.
+  #
+  # After this call, the chip must be taken through the S-P boot sequence, by
+  # calling boot_start and boot_finish.
+  def reset
     
   end
   
   # The first step of the S-P boot sequence.
-  #
+  # 
   # This method can only be called once, right after the P chip is powered on.
   # It should be followed by a call to boot_finish.
   #
@@ -22,13 +54,13 @@ module PChip
   #   puf_syndrome:: the information needed to recover the P chip's symmetric
   #                  key out of its PUF
   #
-  # Returns a randomly generated nonce, and the nonce's HMAC, keyed under the
-  # P chip's symmetric key.
+  # Returns a randomly generated nonce encrypted with the P chip's symmetric
+  # key, and the nonce's HMAC, keyed under the P chip's symmetric key.
   #
   # Raises:
   #   RuntimeError:: if boot_start was already called
   #   RuntimeError:: if the PUF syndrome is invalid
-  def boot_start(puf_syndrome)
+  def boot_start(puf_syndrome, endorsement_certificate)
     
   end
   
@@ -41,43 +73,70 @@ module PChip
   #   root_hash:: the storage root key
   #   state_hmac:: HMAC over the P chip's nonce and root hash, keyed with the
   #                P chip's symmetric key
-  #   endorsement_key:: the private endorsement key for the S-P chip pair,
-  #                     encrypted with the P chip's symmetric key
+  #   encrypted_endorsement_key:: the private endorsement key for the S-P chip
+  #                               pair, encrypted with the P chip symmetric key
   #
   # Returns self.
   #
   # Raises:
-  #   RuntimeError:: if boot_finish was alredy called, or boot_start wasn't
+  #   RuntimeError:: if boot_finish was already called, or boot_start wasn't
   #                  called yet
   #   RuntimeError:: if the HMAC doesn't match the system state (root_hash)
   def boot_finish(root_hash, state_hmac, endorsement_key)
     
   end
+end  # module SpStore::PChip::BootLogic
+
+# API implemented by the P chip's session key cache.
+#
+# The cache is secure volatile memory that stores HMAC keys for the S-P store's
+# user sessions. The cache size will likely be smaller than the maximum number
+# of concurrent sessions.
+module SessionCache
+  # Maxinum number of session keys that can be cached simultaneously.
+  def capacity
+    
+  end
   
-  # Establishes a session between a S-P store client and the P chip.
+  # Processes a user-supplied encrypted session key to accelerate loads.
+  #
+  # Args:
+  #   encrypted_session_key:: the client-generated session HMAC key, encrypted
+  #                           under the S-P chip pair's' public Endorsement Key
+  #
+  # Returns the session HMAC key, encrypted with the P chip's session encryption
+  # key, which is randomly generated at boot time.
+  def process_key(encrypted_session_key)
+    
+  end
+  
+  # Loads a session table entry.
   #
   # Args:
   #   session_id:: a low number specifying the key slot used by this session
-  #   encrypted_session_key:: the client-generated symmetric session key,
-  #                           encrypted under the S-P chip pair's' public
-  #                           Endorsement Key
+  #   processed_session_key:: the result of calling process_key on the
+  #                           client-supplied encrypted session HMAC key
+  def load(session_id, processed_session_key)
+    
+  end
+end  # module SpStore::PChip::SessionCache
+
+# API implemented by the P chip's node cache.
+module NodeCache
+  # Number of cache lines (entries) in this P chip's node cache.
   #
-  # Returns the HMAC of the given nonce under the session key.
-  def open_session(session_id, encrypted_session_key)
-    session_key = Crypto.pki_decrypt @endorsement_key[:private],
-                                     encrypted_session_key
-    @session_keys[session_id] = session_key
-    Crypto.hmac session_key, nonce
+  # This will not change after the P chip is manufactured.
+  def capacity
+    
   end
   
-  # Tears down a session between a trusted-storage client and the P chip.
+  # The number of data blocks (hash tree leaves) supported by this node cache.
   #
-  # Returns self.
-  def close_session(session_id)
-    @session_keys.delete session_id
-    self
+  # This will not change after the P chip is manufactured.
+  def leaf_count
+    
   end
-  
+
   # Loads a hash tree node into a cache entry.
   #
   # Args:
@@ -103,11 +162,10 @@ module PChip
     
   end
 
-  
   # Certifies a block's contents.
   #
   # Args:
-  #   session_id:: the slot containing the client session key
+  #   session_id:: the session key cache entry for this client's session key
   #   nonce:: short random string that prevents replay attacks
   #   cache_entry:: the cache line holding the block's hash (0-based)
   #
@@ -115,11 +173,11 @@ module PChip
   def certify(session_id, nonce, cache_entry)
     
   end
-  
+
   # Updates a block's contents.
   #
   # Args:
-  #   session_id:: the slot containing the client session key
+  #   session_id:: the session key cache entry for this client's session key
   #   nonce:: short random string that prevents replay attacks
   #   update_path:: sequence of cache entries to be updated / checked during the
   #                 update process; even positions are the cache line numbers of
@@ -132,16 +190,8 @@ module PChip
   def update(session_id, nonce, update_path, data_hash)
     
   end
-  
-  # Computes the hash for a block of data.
-  #
-  # Args:
-  #   data:: the data block to be hashed
-  #
-  # Returns a cryptographic hash of the data block.
-  def hash_block(data)
-    
-  end
-end  # class SpStore::PChip
+end  # module SpStore::PChip::NodeCache
+
+end  # namespace SpStore::PChip
 
 end  # namespace SpStore
