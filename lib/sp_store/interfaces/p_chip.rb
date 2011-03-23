@@ -143,8 +143,8 @@ module NodeCache
   #   cache_entry:: the number of the cache entry to load (0-based)
   #   node_id:: the node ID (not leaf ID) of the node to be loaded
   #   node_hash:: the node's hash
-  #   old_parent_entry:: the number of the cache entry holding the parent of the
-  #                      node held by this cache entry before the load operation
+  #   old_parent_entry:: the cache entry holding the parent of the node held by
+  #                      cache_entry before the load operation
   #
   # Raises:
   #   ArgumentError:: entry or old_parent_entry point to invalid cache entries
@@ -161,34 +161,58 @@ module NodeCache
   def load(cache_entry, node_id, node_hash, old_parent_entry)
     
   end
+  
+  # Verifies the hash values of cached nodes based on their parent.
+  #
+  # Args:
+  #   parent_entry:: the cache entry holding the parent node (0-based)
+  #   left_child_entry:: the cache entry holding the left child (0-based)
+  #   right_child_entry:: the cache entry holding the right child (0-based)
+  #
+  # Raises:
+  #   ArgumentError:: parent_entry, left_child_entry, or right_child_entry point
+  #                   to invalid entries in the cache
+  #   ArgumentError:: the node in the parent entry is not verified
+  #   ArgumentError:: the nodes stored in left_child and right_child aren't
+  #                       the children of the node in parent
+  #   ArgumentError:: a child is not verified, but the parent's corresponding
+  #                    flag shows there is another verified entry for that child
+  #                    in the cache
+  #   ArgumentError:: the parent's hash does not match the children's hashes
+  #
+  # If the method succeeds, the verified flags will be set for both children.
+  # The method correctly handles situations where a child was already verified.
+  def verify(parent_entry, left_child_entry, right_child_entry)
+    
+  end
 
-  # Certifies a block's contents.
+  # Certifies a leaf's contents.
   #
   # Args:
   #   session_id:: the session key cache entry for this client's session key
   #   nonce:: short random string that prevents replay attacks
   #   cache_entry:: the cache line holding the block's hash (0-based)
   #
-  # Returns: HMAC(session key, nonce || block number || block hash)
+  # Returns HMAC(session key, nonce || node number || block hash)
   def certify(session_id, nonce, cache_entry)
     
   end
 
-  # Updates a block's contents.
+  # Updates a leaf's contents.
   #
   # Args:
   #   session_id:: the session key cache entry for this client's session key
-  #   nonce:: short random string that prevents replay attacks
   #   update_path:: sequence of cache entries to be updated / checked during the
   #                 update process; even positions are the cache line numbers of
   #                 the nodes on the path between the leaf and the tree root,
   #                 and odd positions are the cache line numbers of the siblings
   #                 of the nodes in the corresponding even posittions
-  #   data_hash:: the hash of the block's new contents
+  #   node_hash:: the hash of the block's new contents
   #
-  # Returns: HMAC(Digest(data) || block_number || nonce)
-  def update(session_id, nonce, update_path, data_hash)
-    
+  # Returns an array of updated node hashes for all the nodes on the path
+  # between the leaf and the tree root.
+  def update(session_id, update_path, node_hash)
+    # TODO(pwnall): some sort of signature+nonce to authorize the write
   end
 end  # module SpStore::PChip::NodeCache
 
