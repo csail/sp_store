@@ -21,14 +21,14 @@ class SoftSessionCache
   end
 
   def load(session_id, processed_session_key)
-    check_session_id
+    check_session_id session_id
     @keys[session_id] = Crypto.sk_decrypt @process_key, processed_session_key
   end
 
   # :nodoc: called inside the P chip, and the result never leaves the chip.
   def session_key(session_id)
-    check_session_id
-    raise RuntimeError, "Invalid session"
+    check_session_id session_id
+    @keys[session_id]
   end
   
   def check_session_id(session_id)
