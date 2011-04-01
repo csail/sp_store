@@ -19,7 +19,7 @@ class SoftNodeCache
   
   def certify(session_id, nonce, cache_entry)
     hmac_key = @key_cache.session_key session_id
-    unsafe_certify hmac_key, node_cache_entry
+    unsafe_certify hmac_key, nonce, cache_entry
   end
   
   def update(session_id, update_path, data_hash)
@@ -30,18 +30,18 @@ class SoftNodeCache
   end
 
   def load(cache_entry, node_id, node_hash, old_parent_entry)
-    check_entry entry
+    check_entry cache_entry
     if node_id <= 1 || node_id >= 2 * @leaf_count
       raise ArgumentError, "Invalid node id #{node_id.inspect}"
     end
-    if @verified[entry]            
+    if @verified[cache_entry]
       check_entry old_parent_entry
-      if @left_child[entry] or @right_child[entry]
+      if @left_child[cache_entry] or @right_child[cache_entry]
         raise ArgumentError, "The entry's node has at least one child cached"
       end
       
-      old_node_id = @node_ids[entry]
-      if @node_ids[old_parent_entry] != HashTree.parent(old_node_id)
+      old_node_id = @node_ids[cache_entry]
+      if @node_ids[old_parent_entry] != Helpers.parent(old_node_id)
         raise ArgumentError, 'Parent node not found at old_parent_entry'
       end
       if Helpers.left_child?(old_node_id)
@@ -50,10 +50,10 @@ class SoftNodeCache
         @right_child[old_parent_entry] = false
       end
     end
-    @node_ids[entry] = node_id
-    @verified[entry] = false
-    @node_hashes[entry] = node_hash
-    @left_child[entry] = @right_child[entry] = false
+    @node_ids[cache_entry] = node_id
+    @verified[cache_entry] = false
+    @node_hashes[cache_entry] = node_hash
+    @left_child[cache_entry] = @right_child[cache_entry] = false
   end
 
   def verify(parent, left_child, right_child)
@@ -62,11 +62,11 @@ class SoftNodeCache
     check_entry right_child
   
     raise ArgumentError, 'Parent entry not verified' unless @verified[parent]
-    unless @node_ids[left_child] == HashTree.left_child(@node_ids[parent])
+    unless @node_ids[left_child] == Helpers.left_child(@node_ids[parent])
       raise ArgumentError,
             "Incorrect left child entry #{left_child} for #{parent}"
     end
-    unless @node_ids[right_child] == HashTree.right_child(@node_ids[parent])
+    unless @node_ids[right_child] == Helpers.right_child(@node_ids[parent])
       raise ArgumentError,
             "Incorrect right child entry #{right_child} for #{parent}"
     end
@@ -77,7 +77,7 @@ class SoftNodeCache
       raise ArgumentError, 'Duplicate right child node'
     end
     
-    parent_hash = HashTree.node_hash @node_ids[parent],
+    parent_hash = SpStore::Crypto.hash_for_tree_node @node_ids[parent],
         @node_hashes[left_child], @node_hashes[right_child]
     unless @node_hashes[parent] == parent_hash
       raise ArgumentError, 'Verification failed'
@@ -119,11 +119,11 @@ class SoftNodeCache
       hot_node = @node_ids[hot_entry]
       cold_node = @node_ids[cold_entry]
       parent_node = @node_ids[parent_entry]
-      @node_hashes[parent_entry] = if HashTree.left_child?(hot_node)
-        HashTree.node_hash parent_node, @node_hashes[hot_entry],
+      @node_hashes[parent_entry] = if Helpers.left_child?(hot_node)
+        Helpers.node_hash parent_node, @node_hashes[hot_entry],
                                         @node_hashes[cold_entry]
       else
-        HashTree.node_hash parent_node, @node_hashes[cold_entry],
+        Helpers.node_hash parent_node, @node_hashes[cold_entry],
                                         @node_hashes[hot_entry]
       end
     end
@@ -163,11 +163,11 @@ class SoftNodeCache
     end
     
     visit_update_path update_path do |hot_entry, cold_entry, parent_entry|
-      unless HashTree.siblings?(@node_ids[hot_entry], @node_ids[cold_entry])
+      unless Helpers.siblings?(@node_ids[hot_entry], @node_ids[cold_entry])
         raise InvalidUpdatePath,
               "Path contains non-siblings #{hot_entry} and #{cold_entry}"
       end
-      unless HashTree.parent(@node_ids[hot_entry]) == @node_ids[parent_entry]
+      unless Helpers.parent(@node_ids[hot_entry]) == @node_ids[parent_entry]
         raise InvalidUpdatePath,
               "Path entry #{parent_entry} is not parent for #{hot_entry}"
       end
@@ -206,7 +206,7 @@ class SoftNodeCache
   end
   private :visit_update_path
   
-  Helpers = SpStore::Merkle::HashTreeHelper::ClassMethods
+  Helpers = SpStore::Merkle::HashTreeHelper
 end  # class SpStore::PChip::SoftNodeCache
   
 end  # namespace SpStore::Mocks

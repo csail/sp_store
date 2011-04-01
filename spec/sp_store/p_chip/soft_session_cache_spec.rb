@@ -1,16 +1,19 @@
 require File.expand_path(File.dirname(__FILE__) + '../../../spec_helper')
 
 describe SpStore::PChip::SoftSessionCache do
-  before do
-    @key = SpStore::Mocks::FactoryKeys.ca_keys
-    @cache = SpStore::PChip::SoftSessionCache.new 64, @key
-  end
+  let(:endorsement_key) { SpStore::Mocks::FactoryKeys.ca_keys }
+  let(:public_key) { endorsement_key[:public] }
+  let(:cache) { SpStore::PChip::SoftSessionCache.new 64, endorsement_key }
 
+  before do
+    @public_key = public_key
+    @cache = cache
+  end
   it_should_behave_like 'a session cache'
-  
+
   let(:session_key) { SpStore::Crypto.hmac_key }
-  let(:encrypted_key) { SpStore::Crypto.pki_encrypt @key[:public], session_key }
-  let(:processed_key) { @cache.process_key encrypted_key }
+  let(:encrypted_key) { SpStore::Crypto.pki_encrypt public_key, session_key }
+  let(:processed_key) { cache.process_key encrypted_key }
 
   describe 'load' do
     before do

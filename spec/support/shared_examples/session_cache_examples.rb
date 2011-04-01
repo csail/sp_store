@@ -10,7 +10,7 @@ shared_examples_for 'a session cache' do
   end
 
   let(:session_key) { SpStore::Crypto.hmac_key }
-  let(:encrypted_key) { SpStore::Crypto.pki_encrypt @key[:public], session_key }
+  let(:encrypted_key) { SpStore::Crypto.pki_encrypt @public_key, session_key }
   let(:processed_key) { @cache.process_key encrypted_key }
 
   describe 'process_key' do
