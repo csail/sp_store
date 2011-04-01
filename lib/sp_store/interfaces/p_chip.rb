@@ -149,10 +149,10 @@ module NodeCache
   # Raises:
   #   ArgumentError:: entry or old_parent_entry point to invalid cache entries
   #   ArgumentError:: node_id is an invalid hash tree node number
-  #   ArgumentError:: entry is validated, and old_parent_entry does not
-  #                   store the parent node of entry's node
-  #   ArgumentError:: entry is validated, and its node has at least one child
-  #                   stored in a validated cache entry
+  #   RuntimeError:: entry is validated, and old_parent_entry does not
+  #                  store the parent node of entry's node
+  #   RuntimeError:: entry is validated, and its node has at least one child
+  #                  stored in a validated cache entry
   #
   # A node's entry can only be overwritten if none of the node's children is
   # cached. When loading a new node in an entry, the old node's parent is
@@ -172,13 +172,13 @@ module NodeCache
   # Raises:
   #   ArgumentError:: parent_entry, left_child_entry, or right_child_entry point
   #                   to invalid entries in the cache
-  #   ArgumentError:: the node in the parent entry is not verified
-  #   ArgumentError:: the nodes stored in left_child and right_child aren't
-  #                       the children of the node in parent
-  #   ArgumentError:: a child is not verified, but the parent's corresponding
-  #                    flag shows there is another verified entry for that child
-  #                    in the cache
-  #   ArgumentError:: the parent's hash does not match the children's hashes
+  #   RuntimeError:: the node in the parent entry is not verified
+  #   RuntimeError:: the nodes stored in left_child and right_child aren't
+  #                  the children of the node in parent
+  #   RuntimeError:: a child is not verified, but the parent's corresponding
+  #                  flag shows there is another verified entry for that child
+  #                  in the cache
+  #   RuntimeError:: the parent's hash does not match the children's hashes
   #
   # If the method succeeds, the verified flags will be set for both children.
   # The method correctly handles situations where a child was already verified.

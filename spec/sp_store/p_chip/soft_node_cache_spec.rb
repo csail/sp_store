@@ -9,7 +9,7 @@ describe SpStore::PChip::SoftNodeCache do
     session_cache
   end
   let(:cache) { SpStore::PChip::SoftNodeCache.new 64, 1024, session_cache }
-  let(:default_leaf) { SpStore::Crypto.crypto_hash "0" }
+  let(:default_leaf) { SpStore::Crypto.crypto_hash '0' }
   let(:tree) { SpStore::Mocks::SoftHashTree.new 1024, default_leaf }
 
   before do

@@ -1,6 +1,6 @@
 shared_examples_for 'a session cache' do
+  let(:capacity) { @cache.capacity }
   describe 'capacity' do
-    let(:capacity) { @cache.capacity }
     it 'should be positive' do
       capacity.should > 0
     end
@@ -21,7 +21,7 @@ shared_examples_for 'a session cache' do
     it 'should fail on improperly formatted keys' do
       lambda {
         @cache.process_key encrypted_key.reverse
-      }.should raise_error
+      }.should raise_error(RuntimeError)
     end
   end
 
@@ -34,14 +34,14 @@ shared_examples_for 'a session cache' do
     
     it 'should reject negative entry numbers' do
       lambda {
-        @cache.load -1, processed_key
-      }.should raise_error
+        @cache.load(-1, processed_key)
+      }.should raise_error(ArgumentError)
     end
 
     it 'should reject large entry numbers' do
       lambda {
         @cache.load capacity + 1, processed_key
-      }.should raise_error
+      }.should raise_error(ArgumentError)
     end
   end
 end

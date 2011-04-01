@@ -33,7 +33,7 @@ class SoftSessionCache
   
   def check_session_id(session_id)
     if session_id < 0 || session_id >= @capacity
-      raise RuntimeError,
+      raise ArgumentError,
             "Invalid session_id #{session_id}; table capacity #{capacity}"
     end
   end

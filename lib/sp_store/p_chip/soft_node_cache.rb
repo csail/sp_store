@@ -37,12 +37,12 @@ class SoftNodeCache
     if @verified[cache_entry]
       check_entry old_parent_entry
       if @left_child[cache_entry] or @right_child[cache_entry]
-        raise ArgumentError, "The entry's node has at least one child cached"
+        raise RuntimeError, "The entry's node has at least one child cached"
       end
       
       old_node_id = @node_ids[cache_entry]
       if @node_ids[old_parent_entry] != Helpers.parent(old_node_id)
-        raise ArgumentError, 'Parent node not found at old_parent_entry'
+        raise RuntimeError, 'Parent node not found at old_parent_entry'
       end
       if Helpers.left_child?(old_node_id)
         @left_child[old_parent_entry] = false
@@ -61,26 +61,26 @@ class SoftNodeCache
     check_entry left_child
     check_entry right_child
   
-    raise ArgumentError, 'Parent entry not verified' unless @verified[parent]
+    raise RuntimeError, 'Parent entry not verified' unless @verified[parent]
     unless @node_ids[left_child] == Helpers.left_child(@node_ids[parent])
-      raise ArgumentError,
+      raise RuntimeError,
             "Incorrect left child entry #{left_child} for #{parent}"
     end
     unless @node_ids[right_child] == Helpers.right_child(@node_ids[parent])
-      raise ArgumentError,
+      raise RuntimeError,
             "Incorrect right child entry #{right_child} for #{parent}"
     end
     unless @verified[left_child] == @left_child[parent]
-      raise ArgumentError, 'Duplicate left child node'
+      raise RuntimeError, 'Duplicate left child node'
     end
     unless @verified[right_child] == @right_child[parent]
-      raise ArgumentError, 'Duplicate right child node'
+      raise RuntimeError, 'Duplicate right child node'
     end
     
     parent_hash = SpStore::Crypto.hash_for_tree_node @node_ids[parent],
         @node_hashes[left_child], @node_hashes[right_child]
     unless @node_hashes[parent] == parent_hash
-      raise ArgumentError, 'Verification failed'
+      raise RuntimeError, 'Verification failed'
     end
     @left_child[parent] = @right_child[parent] = true
     @verified[left_child] = @verified[right_child] = true
@@ -102,7 +102,7 @@ class SoftNodeCache
   # :nodoc: software implementation of P-chip certify
   def unsafe_certify(hmac_key, nonce, cache_entry)
     check_entry cache_entry
-    raise ArgumentError, 'Entry not verified' unless @verified[cache_entry]
+    raise RuntimeError, 'Entry not verified' unless @verified[cache_entry]
     
     Crypto.hmac_for_block_hash @node_ids[cache_entry],
                                @node_hashes[cache_entry], nonce, hmac_key
@@ -114,17 +114,17 @@ class SoftNodeCache
     update_path.each { |path_entry| check_entry path_entry }    
     check_update_path update_path
     
-    @node_hashes[update_path.first] = new_value
+    @node_hashes[update_path.first] = data_hash
     visit_update_path update_path do |hot_entry, cold_entry, parent_entry|
       hot_node = @node_ids[hot_entry]
       cold_node = @node_ids[cold_entry]
       parent_node = @node_ids[parent_entry]
       @node_hashes[parent_entry] = if Helpers.left_child?(hot_node)
-        Helpers.node_hash parent_node, @node_hashes[hot_entry],
-                                        @node_hashes[cold_entry]
+        SpStore::Crypto.hash_for_tree_node parent_node,
+            @node_hashes[hot_entry], @node_hashes[cold_entry]
       else
-        Helpers.node_hash parent_node, @node_hashes[cold_entry],
-                                        @node_hashes[hot_entry]
+        SpStore::Crypto.hash_for_tree_node parent_node,
+            @node_hashes[cold_entry], @node_hashes[hot_entry]
       end
     end
   end
@@ -156,29 +156,29 @@ class SoftNodeCache
   # process, and exceptions that can be raised.
   def check_update_path(update_path)
     if @node_ids[update_path.first] < @leaf_count
-      raise InvalidUpdatePath, "Update path does not start at a leaf"
+      raise RuntimeError, "Update path does not start at a leaf"
     end
     if @node_ids[update_path.last] != 1
-      raise InvalidUpdatePath, "Update path does not contain root node"
+      raise RuntimeError, "Update path does not contain root node"
     end
     
     visit_update_path update_path do |hot_entry, cold_entry, parent_entry|
       unless Helpers.siblings?(@node_ids[hot_entry], @node_ids[cold_entry])
-        raise InvalidUpdatePath,
+        raise RuntimeError,
               "Path contains non-siblings #{hot_entry} and #{cold_entry}"
       end
       unless Helpers.parent(@node_ids[hot_entry]) == @node_ids[parent_entry]
-        raise InvalidUpdatePath,
+        raise RuntimeError,
               "Path entry #{parent_entry} is not parent for #{hot_entry}"
       end
       
       # NOTE: the checks below will not run for the root node; that's OK, the
       #       root node is always verified, as it never leaves the cache
       unless @verified[hot_entry]
-        raise UnverifiedEntry, "Unverified entry #{hot_entry}"
+        raise RuntimeError, "Unverified entry #{hot_entry}"
       end
       unless @verified[cold_entry]
-        raise UnverifiedEntry, "Unverified entry #{cold_entry}"
+        raise RuntimeError, "Unverified entry #{cold_entry}"
       end
     end
   end
@@ -196,7 +196,7 @@ class SoftNodeCache
   #
   # The return value is not specified.
   def visit_update_path(update_path)
-    0.upto(update_path.length / 2 - 1) do |i|
+    (0...(update_path.length / 2)).map do |i|
       hot_entry = update_path[i * 2]  # Node to be updated.
       cold_entry = update_path[i * 2 + 1]  # Sibling of the node to be updated.
       parent_entry = update_path[i * 2 + 2]  # Parent of the node to be updated.
