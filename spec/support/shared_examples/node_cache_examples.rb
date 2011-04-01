@@ -196,6 +196,19 @@ shared_examples_for 'a node cache' do
           @cache.update(@session_id, path_dup, new_leaf_hash)
         }.should raise_error(RuntimeError)
       end
+      
+      it 'should fail if the path contains unvalidated nodes' do
+        update_path.each_with_index do |entry, index|
+          node = update_nodes[index]
+          next if node == 1
+          @cache.load capacity - 1, node, @tree.node_hash(node), -1
+          path_dup = update_path.dup
+          path_dup[index] = capacity - 1
+          lambda {
+            @cache.update(@session_id, path_dup, new_leaf_hash)
+          }.should raise_error(RuntimeError)
+        end
+      end
     end
   end
 end
