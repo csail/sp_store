@@ -16,7 +16,11 @@ class SoftSessionCache
   attr_reader :capacity
 
   def process_key(encrypted_session_key)
-    hmac_key = Crypto.pki_decrypt @ekey[:private], encrypted_session_key
+    begin
+      hmac_key = Crypto.pki_decrypt @ekey[:private], encrypted_session_key
+    rescue OpenSSL::PKey::RSAError
+      raise RuntimeError, 'Incorrectly encrypted session key'
+    end
     Crypto.sk_encrypt @process_key, hmac_key
   end
 

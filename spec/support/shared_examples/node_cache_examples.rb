@@ -155,7 +155,7 @@ shared_examples_for 'a node cache' do
         golden_hashes = []
         update_nodes.each_with_index do |node, index|
           next if index == 0 || index % 2 == 1
-          golden_hashes << @tree.node_hash(index)
+          golden_hashes << @tree.node_hash(node)
         end
         @cache.update(@session_id, update_path, new_leaf_hash).should == 
             golden_hashes
