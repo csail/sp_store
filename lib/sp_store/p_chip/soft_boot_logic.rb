@@ -13,16 +13,19 @@ class SoftBootLogic
   #           process
   #   ca_public_key:: the public key of the S-P chip pair's manufacturer root
   #                   CA; this is burned in the P chip's ROM
-  def initialize(p_key, ca_public_key)
+  #   observer:: receives call to booted and reset as part of the boot process
+  def initialize(p_key, ca_public_key, observer)
     @p_key = p_key
     @ca_pubkey = ca_public_key
+    @observer = observer
   end
 
   def reset
-    @session_cache = new SpStore::PChip::SessionTable session_cache_size
+    # State transition.
     @boot_nonce = nil
     @root_hash = nil
     @endorsement_key = nil
+    @observer.reset
   end
   
   def boot_start(puf_syndrome, endorsement_certificate)
@@ -30,10 +33,10 @@ class SoftBootLogic
     raise RuntimeError, 'Already called boot_start' if @boot_nonce
 
     # Argument check.
-    if Crypto.crypto_hash(puf_syndrome) != @p_key
+    if Crypto.crypto_hash(@p_key) != puf_syndrome
       raise RuntimeError, 'Invalid PUF syndrome'
     end
-    if endorsement_certificate.public_key != @ca_pubkey
+    if !SpStore::Crypto.verify_cert_ca_key(endorsement_certificate, @ca_pubkey)
       raise RuntimeError, 'Invalid Endorsement Certificate'
     end
     @endorsement_certificate = endorsement_certificate
@@ -55,13 +58,15 @@ class SoftBootLogic
     end
     endorsement_key = Crypto.key_pair(
         Crypto.sk_decrypt(@p_key, encrypted_endorsement_key))
-    if endorsement_key[:public] != @endorsement_certificate.public_key
+    if endorsement_key[:public].inspect !=
+       @endorsement_certificate.public_key.inspect
       raise RuntimeError, 'Endorsement key does not match certificate'
     end
     
     # State transition.
     @endorsement_key = endorsement_key
     @root_hash = root_hash
+    @observer.booted @root_hash, @endorsement_key
   end
   
   # 

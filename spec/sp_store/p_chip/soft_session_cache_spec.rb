@@ -3,9 +3,10 @@ require File.expand_path(File.dirname(__FILE__) + '../../../spec_helper')
 describe SpStore::PChip::SoftSessionCache do
   let(:endorsement_key) { SpStore::Mocks::FactoryKeys.ca_keys }
   let(:public_key) { endorsement_key[:public] }
-  let(:cache) { SpStore::PChip::SoftSessionCache.new 64, endorsement_key }
+  let(:cache) { SpStore::PChip::SoftSessionCache.new 64 }
 
   before do
+    cache.set_endorsement_key endorsement_key
     @public_key = public_key
     @cache = cache
   end

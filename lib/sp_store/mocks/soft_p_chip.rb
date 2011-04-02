@@ -19,19 +19,27 @@ class SoftPChip
   #             session_cache_size:: number of session keys supported by the
   #                                  simulated chip's session cache
   def initialize(p_key, ca_public_key, options)
+    @session_cache_size = options[:session_cache_size]
+    @node_cache_size = options[:cache_size]
+    @node_count = options[:capacity]
     @boot_logic = SpStore::PChip::SoftBootLogic.new p_key, ca_public_key, self
-    @session_cache = SpStore::PChip::SoftSessionCache.new(
-         options[:session_cache_size])
-    @node_cache = SpStore::PChip::SoftNodeCache.new options[:cache_size],
-         options[:capacity], session_cache
-
+    @session_cache = nil
+    @node_cache = nil
     @boot_logic.reset
   end
   
-  attr_reader :capacity
-  attr_reader :cache_size
-  attr_reader :session_cache_size
+  attr_reader :boot_logic
+  attr_reader :session_cache
+  attr_reader :node_cache
   
+  # :nodoc: called by boot logic
+  def reset
+    @session_cache = SpStore::PChip::SoftSessionCache.new @session_cache_size
+    @node_cache = SpStore::PChip::SoftNodeCache.new @node_cache_size,
+                                                    @node_count, @session_cache
+  end
+  
+  # :nodoc: called by boot logic, arguments never leave the chip
   def booted(root_hash, endorsement_key)
     @node_cache.set_root_hash root_hash
     @session_cache.set_endorsement_key endorsement_key

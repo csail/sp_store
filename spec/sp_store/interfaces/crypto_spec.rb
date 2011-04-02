@@ -108,6 +108,14 @@ describe SpStore::Crypto do
     it 'should not verify with a different CA' do
       SpStore::Crypto.verify_cert(cert, [ca2_cert]).should be_false
     end
+
+    it 'should verify with the CA public key' do
+      SpStore::Crypto.verify_cert_ca_key(cert, ca_key[:public]).should be_true
+    end
+
+    it 'should not verify with a different CA' do
+      SpStore::Crypto.verify_cert_ca_key(cert, ca2_key[:public]).should be_false
+    end
     
     let(:saved_cert) { SpStore::Crypto.save_cert cert }
     it 'should load a saved certificate' do

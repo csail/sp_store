@@ -207,6 +207,15 @@ module Crypto
     ca_certs.each { |ca_cert| store.add_cert ca_cert }
     store.verify cert
   end
+  
+  # Checks that a certificate was produced by a CA with the given public key.
+  #
+  # Args:
+  #   cert:: the certificate to be verified
+  #   ca_public_key:: the public key of a trusted CA
+  def self.verify_cert_ca_key(cert, ca_public_key)
+    cert.verify ca_public_key
+  end
 
   # The OpenSSL cryptographic hashing engine.
   def self.ossl_crypto_hash

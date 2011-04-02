@@ -6,9 +6,9 @@ module PChip
 
 # Software (untrusted) implementation of the P chip's session key cache.
 class SoftSessionCache
-  def initialize(capacity, endorsement_key)
+  def initialize(capacity)
     @capacity = capacity
-    @ekey = endorsement_key
+    @ekey = nil
     @keys = Array.new capacity
     @process_key = Crypto.sk_key
   end
@@ -33,6 +33,11 @@ class SoftSessionCache
   def session_key(session_id)
     check_session_id session_id
     @keys[session_id]
+  end
+  
+  # :nodoc: called from the P chip's boot logic, argument never leaves the chip.
+  def set_endorsement_key(endorsement_key)
+    @ekey = endorsement_key
   end
   
   def check_session_id(session_id)

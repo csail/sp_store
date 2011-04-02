@@ -9,7 +9,7 @@ class SoftSChip
   def initialize(p_key, endorsement_key, endorsement_certificate, puf_syndrome,
                  root_hash)
     @p_key = p_key
-    @sp_key = sp_key
+    @sp_key = endorsement_key
     @puf_syndrome = puf_syndrome
     @endorsement_certificate = endorsement_certificate
     @root_hash = root_hash
