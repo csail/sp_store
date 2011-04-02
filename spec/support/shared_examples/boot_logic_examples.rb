@@ -39,4 +39,39 @@ shared_examples_for 'a boot logic block' do
       }.should_not raise_error
     end
   end
+  
+  describe 'boot_finish' do
+    before do
+      @boot_root_hash, @boot_hmac, @boot_encrypted_key =
+          @s_chip.boot(*@boot_logic.boot_start(@puf_syndrome,
+                                               @endorsement_certificate))
+    end
+    
+    it 'should accept correct parameters' do
+      lambda {
+        @boot_logic.boot_finish @boot_root_hash, @boot_hmac, @boot_encrypted_key
+      }.should_not raise_error
+    end
+    
+    it 'should reject an incorrect root hash' do
+      lambda {
+        @boot_logic.boot_finish @boot_root_hash.reverse, @boot_hmac,
+                                @boot_encrypted_key
+      }.should raise_error(RuntimeError)
+    end
+
+    it 'should reject an incorrect nonce' do
+      lambda {
+        @boot_logic.boot_finish @boot_root_hash, @boot_hmac.reverse,
+                                @boot_encrypted_key
+      }.should raise_error(RuntimeError)
+    end
+    
+    it 'should reject an incorrect encrypted key' do
+      lambda {
+        @boot_logic.boot_finish @boot_root_hash, @boot_hmac,
+                                @boot_encrypted_key.reverse
+      }.should raise_error(RuntimeError)
+    end
+  end
 end

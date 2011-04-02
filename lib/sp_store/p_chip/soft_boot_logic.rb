@@ -37,7 +37,7 @@ class SoftBootLogic
       raise RuntimeError, 'Invalid PUF syndrome'
     end
     if !SpStore::Crypto.verify_cert_ca_key(endorsement_certificate, @ca_pubkey)
-      raise RuntimeError, 'Invalid Endorsement Certificate'
+      raise RuntimeError, 'Invalid endorsement certificate'
     end
     @endorsement_certificate = endorsement_certificate
 
@@ -56,8 +56,13 @@ class SoftBootLogic
     if Crypto.hmac(@p_key, [root_hash, @boot_nonce].join) != state_hmac
       raise RuntimeError, 'State HMAC check failed'
     end
-    endorsement_key = Crypto.key_pair(
-        Crypto.sk_decrypt(@p_key, encrypted_endorsement_key))
+    endorsement_key = nil
+    begin
+      endorsement_key = Crypto.key_pair(
+          Crypto.sk_decrypt(@p_key, encrypted_endorsement_key))
+    rescue OpenSSL::PKey::RSAError
+      raise RuntimeError, 'Invalid endorsement key'
+    end
     if endorsement_key[:public].inspect !=
        @endorsement_certificate.public_key.inspect
       raise RuntimeError, 'Endorsement key does not match certificate'
