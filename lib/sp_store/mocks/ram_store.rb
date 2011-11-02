@@ -40,7 +40,6 @@ class RamStore
   
   # :nodoc
   def write_block_unchecked(block_id, data)
-    raise "Wrong data buffer size" if data.length != block_size
     @block_data[block_id] = data.dup
   end
   private :write_block_unchecked
