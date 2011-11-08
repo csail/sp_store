@@ -33,10 +33,10 @@ shared_examples_for 'an s chip' do
     end
     
     it 'result should be accepted by paired p chip' do
-      #lambda {
+      lambda {
         @p_chip.boot_logic.
                 boot_finish(*@s_chip.boot(@encrypted_nonce, @boot_nonce_hmac))
-      #}.should_not raise_error
+      }.should_not raise_error
     end
   end
 end

@@ -13,10 +13,10 @@ class BareController
   #   cert:: if given, it is used as an Endorsement Certificate
   def initialize(store, ca_keys, ca_cert, keys = nil, cert = nil)
     @store = store
-    @ekeys ||= SpStore::Crypto.key_pair
+    @ekeys = keys || SpStore::Crypto.key_pair
     controller_dn = {'CN' => 'SP Mock Controller', 'C' => 'US'}
-    @ecert ||= SpStore::Crypto.cert controller_dn, 365, ca_keys, ca_cert,
-                                    @ekeys[:public]
+    @ecert = cert || SpStore::Crypto.cert controller_dn, 365, ca_keys, ca_cert,
+                                          @ekeys[:public]
   end
 
   def endorsement_certificate

@@ -59,7 +59,7 @@ module FactoryKeys
   
   # Path to development CA certificate and keys.
   def self.dev_files_path
-    File.expand_path File.join(File.dirname(__FILE__))
+    File.expand_path File.dirname(__FILE__)
   end
 end
 
