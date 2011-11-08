@@ -15,8 +15,7 @@ class BareController
     @store = store
     @ekeys = keys || SpStore::Crypto.key_pair
     controller_dn = {'CN' => 'SP Mock Controller', 'C' => 'US'}
-    @ecert = cert || SpStore::Crypto.cert controller_dn, 365, ca_keys, ca_cert,
-                                          @ekeys[:public]
+    @ecert = cert || SpStore::Crypto.cert(controller_dn, 365, ca_keys, ca_cert, @ekeys[:public])
   end
 
   def endorsement_certificate
