@@ -22,10 +22,7 @@ class SoftNodeCache
     unsafe_certify hmac_key, nonce, cache_entry
   end
   
-  def update(session_id, update_path, data_hash)
-    hmac_key = @key_cache.session_key session_id
-    # TODO(pwnall): some sort of signature+nonce to authorize the write
-    
+  def update(update_path, data_hash)
     unsafe_update update_path, data_hash
   end
 
@@ -103,7 +100,6 @@ class SoftNodeCache
   def unsafe_certify(hmac_key, nonce, cache_entry)
     check_entry cache_entry
     raise RuntimeError, 'Entry not verified' unless @verified[cache_entry]
-    
     Crypto.hmac_for_block_hash @node_ids[cache_entry],
                                @node_hashes[cache_entry], nonce, hmac_key
   end

@@ -57,7 +57,7 @@ class Session
   end
 
   def write_block(block_id, data, nonce)
-    data = @store.write_block block_id, data
+    @store.write_block block_id, data
     SpStore::Crypto.hmac_for_block block_id, data, nonce, @key
   end
 end  # class SpStore::Mocks::BareController::Session

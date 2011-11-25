@@ -8,6 +8,10 @@ describe SpStore::Mocks::BareController do
     @ca_cert = SpStore::Crypto.cert ca_dn, 365, ca_keys
     @controller = SpStore::Mocks::BareController.new @store, ca_keys, @ca_cert
   end
-    
+  
+  def node_id(block_id)
+    block_id
+  end
+
   it_should_behave_like 'a store controller'
 end

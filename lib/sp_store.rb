@@ -20,8 +20,10 @@ require 'sp_store/p_chip/soft_session_cache.rb'
 
 require 'sp_store/server/controller.rb'
 require 'sp_store/server/session_allocator.rb'
+require 'sp_store/server/hash_tree_controller.rb'
 
 require 'sp_store/storage/store_call_checker.rb'
+require 'sp_store/storage/disk_store.rb'
 
 require 'sp_store/mocks.rb'
 require 'sp_store/mocks/bare_controller.rb'

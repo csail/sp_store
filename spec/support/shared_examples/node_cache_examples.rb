@@ -157,12 +157,12 @@ shared_examples_for 'a node cache' do
           next if index == 0 || index % 2 == 1
           golden_hashes << @tree.node_hash(node)
         end
-        @cache.update(@session_id, update_path, new_leaf_hash).should == 
+        @cache.update(update_path, new_leaf_hash).should == 
             golden_hashes
       end
       
       it 'should certify the new leaf hash' do
-        @cache.update @session_id, update_path, new_leaf_hash
+        @cache.update update_path, new_leaf_hash
         
         @cache.certify(@session_id, nonce, cache_nodes.length - 1).
             should == SpStore::Crypto.hmac_for_block_hash(cache_nodes.last,
@@ -171,13 +171,13 @@ shared_examples_for 'a node cache' do
       
       it 'should fail if the path does not start at a leaf' do
         lambda {
-          @cache.update(@session_id, update_path[1..-1] + [0], new_leaf_hash)
+          @cache.update(update_path[1..-1] + [0], new_leaf_hash)
         }.should raise_error(RuntimeError)
       end
       
       it 'should fail if the path does not end at the root' do
         lambda {
-          @cache.update(@session_id, update_path[0...-1], new_leaf_hash)
+          @cache.update(update_path[0...-1], new_leaf_hash)
         }.should raise_error(RuntimeError)
       end
       
@@ -185,7 +185,7 @@ shared_examples_for 'a node cache' do
         path_dup = update_path.dup
         path_dup[2, 2] = path_dup[2, 2].reverse
         lambda {
-          @cache.update(@session_id, path_dup, new_leaf_hash)
+          @cache.update(path_dup, new_leaf_hash)
         }.should raise_error(RuntimeError)
       end
 
@@ -193,7 +193,7 @@ shared_examples_for 'a node cache' do
         path_dup = update_path.dup
         path_dup[1] = path_dup[2]
         lambda {
-          @cache.update(@session_id, path_dup, new_leaf_hash)
+          @cache.update(path_dup, new_leaf_hash)
         }.should raise_error(RuntimeError)
       end
       
@@ -205,7 +205,7 @@ shared_examples_for 'a node cache' do
           path_dup = update_path.dup
           path_dup[index] = capacity - 1
           lambda {
-            @cache.update(@session_id, path_dup, new_leaf_hash)
+            @cache.update(path_dup, new_leaf_hash)
           }.should raise_error(RuntimeError)
         end
       end

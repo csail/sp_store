@@ -23,7 +23,7 @@ shared_examples_for 'a store controller' do
     let(:nonce) { SpStore::Crypto.nonce }
     it 'should HMAC read operations' do
       data, hmac = session.read_block 0, nonce
-      hmac.should == SpStore::Crypto.hmac_for_block(0, data, nonce, key)
+      hmac.should == SpStore::Crypto.hmac_for_block(node_id(0), data, nonce, key)
     end
     
     let(:pattern) do
@@ -31,7 +31,7 @@ shared_examples_for 'a store controller' do
     end
     it 'should HMAC write operations' do
       hmac = session.write_block 0, pattern, nonce
-      hmac.should == SpStore::Crypto.hmac_for_block(0, pattern, nonce, key)
+      hmac.should == SpStore::Crypto.hmac_for_block(node_id(0), pattern, nonce, key)
     end
     
     describe 'after a write' do
@@ -40,7 +40,7 @@ shared_examples_for 'a store controller' do
       end
       
       it 'should persist the write' do
-        data, hmac = session.read_block 0, nonce
+        data, hmac = session.read_block 0, nonce  
         data.should == pattern
       end
     end

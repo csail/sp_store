@@ -1,7 +1,7 @@
 # :nodoc: namespace
 module SpStore::Mocks
   
-# Integrity-checking hash tree implemented completly in software.
+# Integrity-checking hash tree implemented completely in software.
 class SoftHashTree
   # Creates a hash tree where all the leaves have the same value.
   #

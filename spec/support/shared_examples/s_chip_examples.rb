@@ -25,7 +25,7 @@ shared_examples_for 'an s chip' do
         @s_chip.boot @encrypted_nonce, @boot_nonce_hmac
       }.should_not raise_error
     end
-    
+            
     it 'should not accept a broken hmac' do
       lambda {
         @s_chip.boot @encrypted_nonce, @boot_nonce_hmac.reverse
