@@ -14,7 +14,7 @@ class HardPChip
   #   ca_public_key:: the public key of the S-P chip pair's manufacturer root CA; 
   #                   this is burned in the P chip's ROM
   #   options:: supports the following keys
-  #             cache_size:: entries in the simulated chip's node cache
+  #             cache_size:: number of entries in the node cache
   #             capacity:: number of data blocks supported by the simulated chip
   #             session_cache_size:: number of session keys supported by the
   #                                  simulated chip's session cache
@@ -25,7 +25,7 @@ class HardPChip
     @boot_logic = SpStore::PChip::SoftBootLogic.new p_key, ca_public_key, self
     @session_cache = nil
     @node_cache = nil
-    @hash_engine = SpStore::PChip::HardHashEngine.new
+    @hash_engine = nil
     @boot_logic.reset
   end
   
@@ -37,14 +37,19 @@ class HardPChip
   # :nodoc: called by boot logic
   def reset
     @session_cache = SpStore::PChip::SoftSessionCache.new @session_cache_size
-    @node_cache = SpStore::PChip::SoftNodeCache.new @node_cache_size,
-                                                    @node_count, @session_cache
+    @node_cache    = SpStore::PChip::HardNodeCache.new @node_cache_size,
+                                                       @node_count, @session_cache
+    @hash_engine   = SpStore::PChip::HardHashEngine.new                                                    
   end
   
   # :nodoc: called by boot logic, arguments never leave the chip
   def booted(root_hash, endorsement_key)
     @node_cache.set_root_hash root_hash
     @session_cache.set_endorsement_key endorsement_key
+  end
+  
+  def hash_block(data)
+    @hash_engine.hash_block data
   end
   
 end  # class SpStore::PChip::HardPChip
