@@ -6,10 +6,14 @@ class DiskStore
   # Creates a new block store with zeroed out blocks.
   #
   # Args:
-  #   block_size:: the application-desired block size, in bytes
+  #   block_size:: the application-desired block size, in bytes, should be multiple of 64
   #   block_count:: number of blocks
   def self.empty_store( block_size, block_count, disk_directory )
 
+    raise ArgumentError, "The block size (#{block_size}) should be multiple of 64." unless block_size%64 == 0
+    raise ArgumentError, "Non-positive number of blocks: #{block_count}." if block_count <= 0
+    raise ArgumentError, "Invalid disk directory: #{disk_directory}" unless Dir.exist? disk_directory
+    
     disk_path = File.join( disk_directory, "sp_store_disk" )
 
     store_attributes = { :block_size  => block_size, 
@@ -24,7 +28,7 @@ class DiskStore
     end
     
     #initialize disk
-    Dir.mkdir(disk_path, 0744) unless ( (File.exist? disk_path)&&(File.directory? disk_path) )
+    Dir.mkdir(disk_path, 0744) unless Dir.exist? disk_path
     
     #initialize disk data
     empty_block      = "\0" * block_size
@@ -56,7 +60,7 @@ class DiskStore
          store_attributes[key.to_sym] = value
       end
     end
-    unless store_attributes[:disk_path] && File.exist?(store_attributes[:disk_path]) && File.directory?(store_attributes[:disk_path])
+    unless store_attributes[:disk_path] && Dir.exist?(store_attributes[:disk_path])
       raise RuntimeError, 'Cannot load store: No existing store' 
     end
     store_attributes[:block_size]  = store_attributes[:block_size].to_i
@@ -79,9 +83,7 @@ class DiskStore
     File.delete store_attribute_file
     if store_attributes[:disk_path]
       store_path = store_attributes[:disk_path]
-      if File.exist?(store_path) && File.directory?(store_path)
-          FileUtils.rm_rf store_path
-      end
+      FileUtils.rm_rf store_path if Dir.exist? store_path
     end
   end
 
