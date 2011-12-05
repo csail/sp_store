@@ -28,7 +28,7 @@ class DiskStore
     end
     
     #initialize disk
-    Dir.mkdir(disk_path, 0744) unless Dir.exist? disk_path
+    Dir.mkdir(disk_path, 0777) unless Dir.exist? disk_path
     
     #initialize disk data
     empty_block      = "\0" * block_size

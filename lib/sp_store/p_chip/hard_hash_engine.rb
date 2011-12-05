@@ -22,10 +22,12 @@ class HardHashEngine
                     }
   end
   
+  # sets the connected connection to P chip (FPGA)
   def set_connection(connector)
     @connector = connector
   end
   
+  # generates instructions to control FPGA to hash the given data
   def hash_block(data)
     chunk_num = data.length>>6
     frame_num = ( chunk_num.to_f / @max_chunk_per_frame ).ceil    

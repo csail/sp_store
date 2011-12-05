@@ -15,7 +15,7 @@ class HardPChip
   #                   this is burned in the P chip's ROM
   #   options:: supports the following keys
   #             cache_size:: number of entries in the node cache
-  #             capacity:: number of data blocks supported by the simulated chip
+  #             capacity:: number of data blocks supported
   #             session_cache_size:: number of session keys supported by the
   #                                  simulated chip's session cache
   def initialize(p_key, ca_public_key, options)
@@ -48,10 +48,12 @@ class HardPChip
     @session_cache.set_endorsement_key endorsement_key
   end
   
+  # calls FPGA's hash engine to hash data blocks
   def hash_block(data)
     @hash_engine.hash_block data
   end
   
+  # passes the connected connection to node_cache & hash_engine
   def set_connection(connector)
     @node_cache.set_connection connector
     @hash_engine.set_connection connector    

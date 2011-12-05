@@ -6,13 +6,26 @@ module Server
 
 # Glues all the S-P store components together.
 class Controller
-  def initialize(storage, s_chip, p_chip)
+  def initialize(storage, s_chip, p_chip, connector)
     @storage = storage
     @s = s_chip
     @p = p_chip
+    @connector = connector
+    connect
     boot_sp_pair
     @allocator = SessionAllocator.new @p.session_cache
     @hash_tree_controller = HashTreeController.new @p.node_cache, @storage.hash_tree
+  end
+ 
+  # sets up connection between p_chip & server
+  def connect
+    @connector.connect
+    @p.set_connection @connector
+  end
+  
+  # disconnects the p_chip 
+  def disconnect
+    @connector.disconnect
   end
   
   # Boots the S-P chip pair that forms the system's TCB.

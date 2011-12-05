@@ -10,7 +10,7 @@ describe SpStore::Server::Controller do
     SpStore::Crypto.cert dn, 1, ca_keys, SpStore::Mocks::FactoryKeys.ca_cert, endorsement_key[:public]
   end 
   
-  let(:block_size)         { 1024 }
+  let(:block_size)         { 2048 }
   let(:block_count)        { 1024 }
   let(:node_cache_size)    {   64 }
   let(:session_cache_size) {   64 }
@@ -28,13 +28,23 @@ describe SpStore::Server::Controller do
         endorsement_certificate, puf_syndrome, root_hash
   end
   let(:p_chip) do
-    SpStore::Mocks::SoftPChip.new p_key, ca_keys[:public], :cache_size => node_cache_size,
+    SpStore::PChip::HardPChip.new p_key, ca_keys[:public], :cache_size => node_cache_size,
         :capacity => block_count, :session_cache_size => session_cache_size
   end
   
-  before do
-    @controller = SpStore::Server::Controller.new store, s_chip, p_chip
-  end   
+  let(:ethernet) do   
+    SpStore::Communication::EthernetController.new 'eth0', 0x88B5, '0x001122334455'
+  end
+
+
+  before(:all) do
+    @controller = SpStore::Server::Controller.new store, s_chip, p_chip, ethernet
+  end
+  
+  after(:all) do
+    @controller.disconnect
+    SpStore::Storage::DiskStore.delete_store
+  end
   
   def node_id(block_id)
     block_id + block_count
