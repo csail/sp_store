@@ -41,6 +41,9 @@ describe SpStore::Storage::DiskStore do
     before do
       SpStore::Storage::DiskStore.empty_store block_size, block_count, disk_directory
     end
+    after(:all) do
+      SpStore::Storage::DiskStore.delete_store
+    end
     it 'should load an existing store' do
       lambda {
         @store = SpStore::Storage::DiskStore.load_store

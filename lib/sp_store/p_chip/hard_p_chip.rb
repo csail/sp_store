@@ -52,6 +52,11 @@ class HardPChip
     @hash_engine.hash_block data
   end
   
+  def set_connection(connector)
+    @node_cache.set_connection connector
+    @hash_engine.set_connection connector    
+  end
+  
 end  # class SpStore::PChip::HardPChip
   
 end  # namespace SpStore::Mocks
