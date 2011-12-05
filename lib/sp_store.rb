@@ -2,6 +2,8 @@
 module SpStore
 end  # namespace SpStore
 
+require 'sp_store/comm/ethernet_controller.rb'
+
 require 'sp_store/interfaces/controller.rb'
 require 'sp_store/interfaces/crypto.rb'
 require 'sp_store/interfaces/factory.rb'
@@ -17,6 +19,9 @@ require 'sp_store/p_chip/interface.rb'
 require 'sp_store/p_chip/soft_boot_logic.rb'
 require 'sp_store/p_chip/soft_node_cache.rb'
 require 'sp_store/p_chip/soft_session_cache.rb'
+require 'sp_store/p_chip/hard_p_chip.rb'
+require 'sp_store/p_chip/hard_hash_engine.rb'
+require 'sp_store/p_chip/hard_node_cache.rb'
 
 require 'sp_store/server/controller.rb'
 require 'sp_store/server/session_allocator.rb'
