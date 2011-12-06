@@ -27,10 +27,22 @@ describe SpStore::Server::Controller do
     SpStore::Mocks::SoftSChip.new p_key, endorsement_key,
         endorsement_certificate, puf_syndrome, root_hash
   end
+
   let(:p_chip) do
     SpStore::PChip::HardPChip.new p_key, ca_keys[:public], :cache_size => node_cache_size,
-        :capacity => block_count, :session_cache_size => session_cache_size
+                                  :capacity => block_count, :session_cache_size => session_cache_size
   end
+  
+  let(:mock_p_chip) do
+    mock_p = SpStore::Mocks::SoftPChip.new p_key, ca_keys[:public], :cache_size => node_cache_size,
+                                           :capacity => block_count, :session_cache_size => session_cache_size
+    class << mock_p
+      def set_connection(connector)
+      end
+    end
+    mock_p
+  end
+  
   
   let(:ethernet) do   
     SpStore::Communication::EthernetController.new 'eth0', 0x88B5, '0x001122334455'
@@ -39,6 +51,7 @@ describe SpStore::Server::Controller do
 
   before(:all) do
     @controller = SpStore::Server::Controller.new store, s_chip, p_chip, ethernet
+#    @controller = SpStore::Server::Controller.new store, s_chip, mock_p_chip, ethernet
   end
   
   after(:all) do
