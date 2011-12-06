@@ -68,6 +68,11 @@ class Controller
     @hash_tree_controller.sign_write_block block_id, data_hash, session_cache_entry, nonce
   end
   
+  # save the current hash_tree to disk
+  def save_hash_tree
+    @storage.save_hash_tree @hash_tree_controller.node_hashes
+  end
+  
   # :nodoc
   def _check_block_id(block_id)
     raise ArgumentError, "Negative block #{block_id}" if block_id < 0

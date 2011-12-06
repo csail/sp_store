@@ -22,6 +22,8 @@ class HashTreeController
     @access_time           = 1
     cache_root_node
   end
+  
+  attr_reader :node_hashes
 
   def cache_root_node
     @cache_infos[root_node_id].cache_entry = @num_of_used_entries

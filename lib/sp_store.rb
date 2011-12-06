@@ -2,6 +2,9 @@
 module SpStore
 end  # namespace SpStore
 
+require 'sp_store/benchmark/store_setup.rb'
+require 'sp_store/benchmark/synthetic_benchmark.rb'
+
 require 'sp_store/comm/ethernet_controller.rb'
 
 require 'sp_store/interfaces/controller.rb'
@@ -34,6 +37,7 @@ require 'sp_store/mocks.rb'
 require 'sp_store/mocks/bare_controller.rb'
 require 'sp_store/mocks/factory_keys.rb'
 require 'sp_store/mocks/ram_store.rb'
+require 'sp_store/mocks/file_store.rb'
 require 'sp_store/mocks/soft_hash_tree.rb'
 require 'sp_store/mocks/soft_p_chip.rb'
 require 'sp_store/mocks/soft_s_chip.rb'

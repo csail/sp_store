@@ -1,0 +1,3 @@
+block_size 1048576
+block_count 2048
+disk_path /home/hjyang/workspace/sp_store_disk

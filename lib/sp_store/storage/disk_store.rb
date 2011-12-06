@@ -2,6 +2,8 @@
 module SpStore::Storage
   
 # Memory-backed block store implementation.
+# Use file as disk
+# Store data blocks and corresponding hash tree 
 class DiskStore
   # Creates a new block store with zeroed out blocks.
   #
@@ -40,7 +42,7 @@ class DiskStore
     empty_block_hash = SpStore::Crypto.crypto_hash empty_block
     tree_size        = SpStore::Merkle::HashTreeHelper.full_tree_node_count block_count
     hash_tree        = SpStore::Mocks::SoftHashTree.new block_count, empty_block_hash
-    File.open(disk_tree_file(disk_path), 'wb') do |file|
+    File.open(disk_hash_file(disk_path), 'wb') do |file|
       file.seek(empty_block_hash.size, IO::SEEK_SET)
       (1..tree_size).each do |node|
          file.write hash_tree.node_hash(node)
@@ -124,7 +126,7 @@ class DiskStore
   def hash_tree
     tree_size = SpStore::Merkle::HashTreeHelper.full_tree_node_count @blocks
     node_hashes = Array.new(tree_size+1)
-    File.open(disk_tree_file(@disk_path), 'rb') do |file|
+    File.open(disk_hash_file(@disk_path), 'rb') do |file|
       file.seek(hash_byte_size, IO::SEEK_SET)
       (1..tree_size).each do |idx|
         node_hashes[idx] = file.read(hash_byte_size)
@@ -137,7 +139,7 @@ class DiskStore
   def save_hash_tree(node_hashes)
     tree_size = SpStore::Merkle::HashTreeHelper.full_tree_node_count @blocks
     raise ArgumentError, "Hash tree size doesn't match the size of the existed one" unless (tree_size+1) == node_hashes.length
-    File.open(disk_tree_file(@disk_path), 'wb') do |file|
+    File.open(disk_hash_file(@disk_path), 'wb') do |file|
       file.seek( hash_byte_size, IO::SEEK_SET)
       (1..tree_size).each do |node|
          file.write node_hashes[node]
@@ -152,8 +154,8 @@ class DiskStore
     end
     
     # Path to disk tree file
-    def disk_tree_file(disk_path)
-      File.join disk_path, 'disk_tree'
+    def disk_hash_file(disk_path)
+      File.join disk_path, 'disk_hash'
     end
 
     # Path to store attribute file
