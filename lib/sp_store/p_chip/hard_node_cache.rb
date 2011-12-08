@@ -28,13 +28,16 @@ class HardNodeCache
     @connector.send command
   end
 
+  require 'timeout'
   # return HMAC value: op_code(8'h06)+ cache_entry(16bits) 
   #                                  + section key(128bits)+ nonce(128bits)
   def certify(session_id, nonce, cache_entry)
     hmac_key = @key_cache.session_key session_id
-    command = [[6].pack('C'), [cache_entry].pack('n'), hmac_key, nonce].join
+    command  = [[6].pack('C'), [cache_entry].pack('n'), hmac_key, nonce].join
     @connector.send command
-    @connector.receive[1,@byte_in_hmac]
+    data     = nil
+    Timeout::timeout(5) { data = @connector.receive[1,@byte_in_hmac] }
+    data
   end
   
   # update: op_code(8'h07) + command_length( 8 bits) 
