@@ -27,9 +27,15 @@ run_benchmark           = false
 test_command, test_type = ARGV[0], ARGV[1]
 
 if test_command
-  raise ArgumentError, "using --test <test_name> to run benchmark" unless test_command=="--test"
-  raise ArgumentError, "test \"#{test_type}\" does not exist" unless SpStore::Benchmark::SyntheticBenchmark.method_defined? test_type
-  run_benchmark = true
+  if test_command == "--init"
+    load_store = false
+  elsif test_command == "--delete"
+    delete_store = true
+  else
+    raise ArgumentError, "using --test <test_name> to run benchmark" unless test_command=="--test"
+    raise ArgumentError, "test \"#{test_type}\" does not exist" unless SpStore::Benchmark::SyntheticBenchmark.method_defined? test_type
+    run_benchmark = true
+  end
 end
 
 ################ initialization ############################
