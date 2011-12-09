@@ -14,7 +14,7 @@ class Controller
     connect
     boot_sp_pair
     @allocator = SessionAllocator.new @p.session_cache
-    @hash_tree_controller = HashTreeController.new @p.node_cache, @storage.hash_tree
+    @hash_tree_controller = HashTreeController.new @p.node_cache, @storage.disk_hash_tree
   end
  
   # sets up connection between p_chip & server
@@ -69,7 +69,7 @@ class Controller
   end
   
   # save the current hash_tree to disk
-  def save_hash_tree
+  def save_hashes
     @storage.save_hash_tree @hash_tree_controller.node_hashes
   end
   

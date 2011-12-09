@@ -50,8 +50,8 @@ describe SpStore::Server::Controller do
 
 
   before(:all) do
-    @controller = SpStore::Server::Controller.new store, s_chip, p_chip, ethernet
-#    @controller = SpStore::Server::Controller.new store, s_chip, mock_p_chip, ethernet
+#    @controller = SpStore::Server::Controller.new store, s_chip, p_chip, ethernet
+    @controller = SpStore::Server::Controller.new store, s_chip, mock_p_chip, ethernet
   end
   
   after(:all) do

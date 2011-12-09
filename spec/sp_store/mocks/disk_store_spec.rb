@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '../../../spec_helper')
 
-describe SpStore::Mocks::FileStore do
+describe SpStore::Mocks::DiskStore do
 
   let(:sp_store_path)  { File.expand_path(File.dirname(__FILE__) + '../../../../') }
   let(:disk_directory) { File.dirname(sp_store_path) }
@@ -10,26 +10,26 @@ describe SpStore::Mocks::FileStore do
 
   describe 'create a 1024-block, 1024-block size store' do
     before do
-      @store = SpStore::Mocks::FileStore.empty_store block_size, block_count, disk_directory
+      @store = SpStore::Mocks::DiskStore.empty_store block_size, block_count, disk_directory
     end
     after do
-      SpStore::Mocks::FileStore.delete_store
+      SpStore::Mocks::DiskStore.delete_store
     end   
     it_should_behave_like 'a block store'
     
-    describe 'disk_hash' do
+    describe 'hashes' do
       it 'should return a previously saved hash values' do
-        @store.disk_hash.each do |hash_value|
+        @store.hashes.each do |hash_value|
           hash_value.should == default_leaf
         end
       end
     end
     
-    describe 'save_disk_hash' do
+    describe 'save_hashes' do
       it 'should save the given hash values' do
         new_hashes = Array.new(block_count) {default_leaf.reverse}
-        @store.save_disk_hash new_hashes
-        @store.disk_hash.each do |hash_value|
+        @store.save_hashes new_hashes
+        @store.hashes.each do |hash_value|
           hash_value.should == default_leaf.reverse
         end
       end
@@ -39,25 +39,25 @@ describe SpStore::Mocks::FileStore do
   
   describe 'load_store' do
     before do
-      SpStore::Mocks::FileStore.empty_store block_size, block_count, disk_directory
+      SpStore::Mocks::DiskStore.empty_store block_size, block_count, disk_directory
     end
     after(:all) do
-      SpStore::Mocks::FileStore.delete_store
+      SpStore::Mocks::DiskStore.delete_store
     end
     it 'should load an existing store' do
       lambda {
-        @store = SpStore::Mocks::FileStore.load_store
+        @store = SpStore::Mocks::DiskStore.load_store
       }.should_not raise_error
     end
     it 'should fail to load if the store is not existed' do
-      SpStore::Mocks::FileStore.delete_store
+      SpStore::Mocks::DiskStore.delete_store
       lambda {
-        @store = SpStore::Mocks::FileStore.load_store
+        @store = SpStore::Mocks::DiskStore.load_store
       }.should raise_error
     end
     describe 'after the store is loaded' do
       before do
-        @store = SpStore::Mocks::FileStore.load_store
+        @store = SpStore::Mocks::DiskStore.load_store
       end
       it_should_behave_like 'a block store'
     end

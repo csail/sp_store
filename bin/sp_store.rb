@@ -119,4 +119,4 @@ eval "benchmark.#{test_type}" if run_benchmark
 ################### Delete Existing Store ###################
 
 SpStore::Storage::DiskStore.delete_store if delete_store
-SpStore::Mocks::FileStore.delete_store   if delete_store
+SpStore::Mocks::DiskStore.delete_store   if delete_store

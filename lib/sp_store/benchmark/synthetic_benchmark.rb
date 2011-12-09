@@ -93,22 +93,9 @@ class SyntheticBenchmark
   # benchmark test: write whole disk continuously   
   def write_only_cont
     puts "Running test: write whole disk continuously"
-    iter_num     = 3
+    iter_num     = 2
     
     File.open(disk_data_file(@write_disk_path), 'rb') do |file|
-  
-      puts "For sp_store controller:"
-      session = create_session @sp_controller
-      (0...iter_num).each do
-        measure_time do
-          (0...@block_count).each do |block_id|
-            file.seek(block_id*@block_size, IO::SEEK_SET)
-            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-          end
-        end
-      end
-      # save hash_tree
-      @sp_controller.save_hash_tree  
         
       puts "For bare controller:"
       session = create_session @bare_controller
@@ -120,8 +107,20 @@ class SyntheticBenchmark
           end
         end
       end
-      @bare_controller.save_disk_hash
-      
+      @bare_controller.save_hashes
+
+      puts "For sp_store controller:"
+      session = create_session @sp_controller
+      (0...iter_num).each do
+        measure_time do
+          (0...@block_count).each do |block_id|
+            file.seek(block_id*@block_size, IO::SEEK_SET)
+            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
+          end
+        end
+      end
+      # save hash_tree
+      @sp_controller.save_hashes     
 
     end
   end
@@ -145,7 +144,7 @@ class SyntheticBenchmark
           end
         end
       end
-      @bare_controller.save_disk_hash
+      @bare_controller.save_hashes
       
       puts "For sp_store controller:"
       session = create_session @sp_controller
@@ -158,7 +157,7 @@ class SyntheticBenchmark
         end
       end
       # save hash_tree
-      @sp_controller.save_hash_tree
+      @sp_controller.save_hashes
     end
   end  
 
@@ -186,7 +185,7 @@ class SyntheticBenchmark
           end
         end
       end
-      @bare_controller.save_disk_hash
+      @bare_controller.save_hashes
       
       puts "For sp_store controller:"
       session = create_session @sp_controller
@@ -206,7 +205,7 @@ class SyntheticBenchmark
         end
       end
       # save hash_tree
-      @sp_controller.save_hash_tree
+      @sp_controller.save_hashes
     end
   end  
 

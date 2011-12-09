@@ -21,9 +21,9 @@ describe SpStore::Storage::DiskStore do
     
     it_should_behave_like 'a block store'
     
-    describe 'hash_tree' do
+    describe 'disk_hash_tree' do
       it 'should return a previously saved hash_tree' do
-        @store.hash_tree[1..-1].should == soft_tree.instance_variable_get(:@nodes)[1..-1]
+        @store.disk_hash_tree[1..-1].should == soft_tree.instance_variable_get(:@nodes)[1..-1]
       end
     end
     
@@ -31,7 +31,7 @@ describe SpStore::Storage::DiskStore do
       it 'should save the given hash_tree' do
         soft_tree[5] = default_leaf.reverse
         @store.save_hash_tree soft_tree.instance_variable_get(:@nodes).dup
-        @store.hash_tree[1..-1].should == soft_tree.instance_variable_get(:@nodes)[1..-1]
+        @store.disk_hash_tree[1..-1].should == soft_tree.instance_variable_get(:@nodes)[1..-1]
       end
     end
   

@@ -25,7 +25,7 @@ module StoreSetup
     end
 
     # mock s_chip initialization
-    root_hash         = store.hash_tree[1]
+    root_hash         = store.disk_hash_tree[1]
     s_chip            = SpStore::Mocks::SoftSChip.new p_key, endorsement_key, endorsement_certificate, puf_syndrome, root_hash
 
     if mock_p_chip 
@@ -53,10 +53,10 @@ module StoreSetup
   def StoreSetup.bare_controller( block_size, block_count, load_store = false )
     # storage initialization
     if load_store
-      store           = SpStore::Mocks::FileStore.load_store
+      store           = SpStore::Mocks::DiskStore.load_store
       check_load_store store, block_size, block_count      
     else
-      store           = SpStore::Mocks::FileStore.empty_store block_size, block_count, disk_directory 
+      store           = SpStore::Mocks::DiskStore.empty_store block_size, block_count, disk_directory 
     end
     ca_dn = {'CN' => 'SP Store Dev CA', 'C' => 'US'}
     ca_keys = SpStore::Crypto.key_pair

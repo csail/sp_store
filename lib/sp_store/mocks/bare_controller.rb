@@ -16,7 +16,19 @@ class BareController
     @ekeys        = keys || SpStore::Crypto.key_pair
     controller_dn = {'CN' => 'SP Mock Controller', 'C' => 'US'}
     @ecert        = cert || SpStore::Crypto.cert(controller_dn, 365, ca_keys, ca_cert, @ekeys[:public])
-    @hashes       = @store.disk_hash
+    @hashes       = @store.class.method_defined?(:hashes)? @store.hashes : initialize_hashes
+  end
+
+  def initialize_hashes
+    hashes = []
+    (0...@store.blocks).each do |block_id|
+      hashes << SpStore::Crypto.crypto_hash( @store.read_block(block_id) )
+    end
+    hashes
+  end
+
+  def save_hashes
+    @store.save_hashes @hashes if @store.class.method_defined? :save_hashes
   end
 
   def endorsement_certificate
@@ -27,11 +39,6 @@ class BareController
     session_key = SpStore::Crypto.pki_decrypt @ekeys[:private],
                                               encrypted_session_key
     Session.new @store, @hashes, session_key
-  end
-  
-  # save the current hash values to disk
-  def save_disk_hash
-    @store.save_disk_hash @hashes
   end
     
 end  # class SpStore::Mocks::BareController

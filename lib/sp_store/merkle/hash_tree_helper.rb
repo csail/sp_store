@@ -164,7 +164,7 @@ class <<self
   include ClassMethods
 end
 # :nodoc: injects ClassMethods in classes and modules that pull HashTreeHelper
-def included(other)
+def self.included(other)
   class <<other
     include ClassMethods
   end
