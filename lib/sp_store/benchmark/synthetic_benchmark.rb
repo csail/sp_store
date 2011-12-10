@@ -160,13 +160,24 @@ class SyntheticBenchmark
       @sp_controller.save_hashes
     end
   end  
+  
+  # benchmark test: read randomly chosen blocks
+  def read_only_random
+    puts "Running test: randomly read data blocks"
+    random_read_write(1.0)
+  end
+
+  # benchmark test: write randomly chosen blocks
+  def write_only_random
+    puts "Running test: randomly write data blocks"
+    random_read_write(0.0)    
+  end
 
   # benchmark test: randomly read or write (with read probability = p )
-  def random_read_write
-    puts "Running test: random read and write data blocks"
+  def random_read_write(p = 0.5)
+    puts "Running test: randomly read and write data blocks"
     iter_num = 3
-    p        = 0.5
-    seed     = 123    
+    seed     = 123
     File.open(disk_data_file(@write_disk_path), 'rb') do |file|        
       puts "For bare controller:"
       session = create_session @bare_controller

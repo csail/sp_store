@@ -35,7 +35,11 @@ session_cache_size      = 64
    options[:write_data] = false   
    opts.on( '--write-data', 'Pre-generate random bytes for block write' ) do
      options[:write_data] = true
-   end   
+   end
+   options[:detailed_time] = false   
+   opts.on( '--detailed-time', 'Detailed timing analysis' ) do
+     options[:detailed_time] = true
+   end      
    options[:test] = nil
    opts.on( '-t', '--test TEST-NAME', 'Run benchmark TEST-NAME' ) do |test_type|
      options[:test] = test_type
@@ -84,7 +88,16 @@ def measure_time
   puts ( Time.now - start )
 end
 
-################ initialization ############################
+################ detailed timing analysis ####################
+
+if options[:detailed_time]
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :read_block )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :write_block )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :read_block )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :write_block )
+end
+
+#################### initialization ##########################
 
 # initialize sp_store controller
 sp_store_controller   = nil

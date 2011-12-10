@@ -4,6 +4,7 @@ end  # namespace SpStore
 
 require 'sp_store/benchmark/store_setup.rb'
 require 'sp_store/benchmark/synthetic_benchmark.rb'
+require 'sp_store/benchmark/detail_time.rb'
 
 require 'sp_store/comm/ethernet_controller.rb'
 
