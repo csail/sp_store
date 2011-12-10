@@ -52,10 +52,11 @@ class HardHashEngine
       last_chunk_num += @max_chunk_per_frame if last_chunk_num == 0
       @connector.send [ @frame_header[:last], frame_info(last_chunk_num, 1),
                         data[byte_offset, @bytes_per_chunk*last_chunk_num] ].join
-    end
-    hash_value = nil
-    Timeout::timeout(5) { hash_value = @connector.receive[1,@byte_in_hash] }
-    hash_value
+    end    
+    #hash_value = nil
+    #Timeout::timeout(5) { hash_value = @connector.receive[1,@byte_in_hash] }
+    #hash_value
+    @connector.receive[1,@byte_in_hash]
   end
   
   # frame_info = { chunk_num(6 bit), block_num(2 bit) }

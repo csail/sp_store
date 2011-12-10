@@ -35,9 +35,10 @@ class HardNodeCache
     hmac_key = @key_cache.session_key session_id
     command  = [[6].pack('C'), [cache_entry].pack('n'), hmac_key, nonce].join
     @connector.send command
-    data     = nil
-    Timeout::timeout(5) { data = @connector.receive[1,@byte_in_hmac] }
-    data
+    #data     = nil
+    #Timeout::timeout(5) { data = @connector.receive[1,@byte_in_hmac] }
+    #data
+    @connector.receive[1,@byte_in_hmac]
   end
   
   # update: op_code(8'h07) + command_length( 8 bits) 
