@@ -47,7 +47,33 @@ module StoreSetup
     
     # controller initialization
     controller        = SpStore::Server::Controller.new store, s_chip, p_chip, ethernet
-      
+    
+    # for multiple benchmarking
+    # add reset function to reset node cache and cache info stored in the hash_tree_controller
+    SpStore::Server::HashTreeController.class_eval do
+      def reset_cache
+        @cache_infos           = Array.new(@node_hashes.length) { CacheInfo.new }
+        @cache_leaves          = Set.new
+        @num_of_used_entries   = 0
+        @access_time           = 1
+        cache_root_node
+      end
+    end
+    SpStore::Server::Controller.class_eval do
+      define_method :reset_node_cache do
+        unless mock_p_chip
+          puts "Reset p_chip's node cache: "
+          loop do
+            response = gets.chomp
+            break if response == "y" || response == "yes"
+          end
+        end
+        root_hash = @hash_tree_controller.node_hashes[1]
+        @p.node_cache.set_root_hash(root_hash)
+        @hash_tree_controller.reset_cache
+      end
+    end          
+    controller
   end
 
   def StoreSetup.bare_controller( block_size, block_count, load_store = false )
