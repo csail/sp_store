@@ -39,7 +39,15 @@ session_cache_size      = 64
    options[:detailed_time] = false   
    opts.on( '--detailed-time', 'Detailed timing analysis' ) do
      options[:detailed_time] = true
-   end      
+   end   
+   options[:node_hit_rate] = false   
+   opts.on( '--nodeCache-hitRate', 'Measure tree cache hit rate' ) do
+     options[:node_hit_rate] = true
+   end
+   options[:node_hit_rate_detail] = false   
+   opts.on( '--nodeCache-hitRate-detail', 'Measure tree cache hit rate (output detailed info)' ) do
+     options[:node_hit_rate_detail] = true
+   end
    options[:test] = nil
    opts.on( '-t', '--test TEST-NAME', 'Run benchmark TEST-NAME' ) do |test_type|
      options[:test] = test_type
@@ -97,6 +105,14 @@ if options[:detailed_time]
   SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :write_block )
 end
 
+################ tree cache hit rate analysis ################
+
+measure_node_hit_rate = options[:node_hit_rate] || options[:node_hit_rate_detail]
+
+if measure_node_hit_rate
+  SpStore::Benchmark::NodeCacheHitRate.calculate_hit_rate options[:node_hit_rate_detail] 
+end
+
 #################### initialization ##########################
 
 # initialize sp_store controller
@@ -116,7 +132,7 @@ end
 
 ############### Benchmark Test Setup ########################
 
-benchmark = SpStore::Benchmark::SyntheticBenchmark.new block_size, block_count, 
+benchmark = SpStore::Benchmark::SyntheticBenchmark.new block_size, block_count, measure_node_hit_rate,
                      SpStore::Benchmark::StoreSetup.disk_directory, sp_store_controller, bare_controller
 
 # pre-generate write data
