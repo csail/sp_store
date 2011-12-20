@@ -226,6 +226,6 @@ module Crypto
   def self.ossl_sk_encryption
     OpenSSL::Cipher::Cipher.new 'AES-128-ECB'
   end
-end  # module Scratchpad::Crypto
+end  # module SpStore::Crypto
 
-end  # namespace Scratchpad
+end  # namespace SpStore
