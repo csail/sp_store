@@ -3,6 +3,8 @@ module SpStore
 end  # namespace SpStore
 
 require 'sp_store/benchmark/store_setup.rb'
+require 'sp_store/benchmark/benchmark_config.rb'
+require 'sp_store/benchmark/check_functionality.rb'
 require 'sp_store/benchmark/synthetic_benchmark.rb'
 require 'sp_store/benchmark/detail_time.rb'
 require 'sp_store/benchmark/node_hit_rate.rb'

@@ -6,7 +6,7 @@ module Benchmark
 # redefine methods to print detailed timing information
 module DetailTiming
     
-  def self.setup(clazz, method_name)
+  def self.setup(clazz, method_name, detail_file_name)
     #find source code
     location      = clazz.instance_method(method_name).source_location
     file_name     = location[0]
@@ -29,30 +29,36 @@ module DetailTiming
       end
     end
     
-#    puts function_code
     new_function_code = []
     function_code.each_with_index do |code, index|
-      if index == 0 || index == (function_code.length - 1)
+      if index == 0
+        new_function_code<<code
+        new_function_code<<"    dfile = File.open(\"#{detail_file_name}\", \"a\")"
+        next
+      end
+      if index == (function_code.length - 1)
         new_function_code<<code
         next
       end
       if code =~ /return/
-        new_function_code<<"    puts \"\""
+        new_function_code<<"    dfile.puts \"\""
+        new_function_code<<"    dfile.close"        
         new_function_code<<code
         next
       end
       if index == (function_code.length - 2) # without return
         new_function_code<<"    start = Time.now"
         new_function_code<<"    temp_var = #{code}"
-        new_function_code<<"    print (Time.now - start).to_s + ' '"
-        new_function_code<<"    puts \"\""
+        new_function_code<<"    dfile.print (Time.now - start).to_s + ' '"
+        new_function_code<<"    dfile.puts \"\""
+        new_function_code<<"    dfile.close"
         new_function_code<<"    temp_var"
         next
       end
       #insert measure commands
       new_function_code<<"    start = Time.now"
       new_function_code<<code
-      new_function_code<<"    print (Time.now - start).to_s + ' '"
+      new_function_code<<"    dfile.print (Time.now - start).to_s + ' '"
     end
     
     #puts new_function_code

@@ -1,3 +1,5 @@
+require 'openssl'
+
 # :nodoc: namespace
 module SpStore 
 # :nodoc: namespace
@@ -101,6 +103,19 @@ module StoreSetup
   
   def StoreSetup.disk_directory
     File.expand_path('../../../../../', __FILE__)
+  end
+
+  def StoreSetup.generate_write_data_file(block_size, block_count)
+    write_disk_path = File.join( disk_directory, "sp_store_write_data" )
+    disk_data_file  = File.join write_disk_path, "write_data"
+    #initialize disk   
+    Dir.mkdir(write_disk_path, 0777) unless Dir.exist? write_disk_path
+    #initialize disk data
+    File.open(disk_data_file, 'wb') do |file|
+      (0...block_count).each do
+         file.write OpenSSL::Random.random_bytes(block_size)
+      end
+    end
   end
 
 end # namespace SpStore::Benchmark::StoreSetup

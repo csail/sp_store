@@ -27,7 +27,7 @@ module NodeCacheHitRate
          if node_cache_entry start_node_id # node_cache hit
             update_node_access_time start_node_id
             @total_node_needed  += 1
-            puts "1 1" if detailed_info
+            puts "0 1" if detailed_info
          else # node_cache miss
             nodes_to_load, nodes_needed = node_load_path_for_read(start_node_id)
             nodes_needed_set            = nodes_needed.to_set

@@ -36,10 +36,10 @@ session_cache_size      = 64
    opts.on( '--write-data', 'Pre-generate random bytes for block write' ) do
      options[:write_data] = true
    end
-   options[:detailed_time] = false   
-   opts.on( '--detailed-time', 'Detailed timing analysis' ) do
-     options[:detailed_time] = true
-   end   
+   options[:detailed_time] = nil
+   opts.on( '--detailed-time FILE', 'Detailed timing analysis written in FILE' ) do |detail_file|
+     options[:detailed_time] = detail_file
+   end
    options[:node_hit_rate] = false   
    opts.on( '--nodeCache-hitRate', 'Measure tree cache hit rate' ) do
      options[:node_hit_rate] = true
@@ -51,6 +51,10 @@ session_cache_size      = 64
    options[:test] = nil
    opts.on( '-t', '--test TEST-NAME', 'Run benchmark TEST-NAME' ) do |test_type|
      options[:test] = test_type
+   end
+   options[:check_functionality] = false   
+   opts.on( '--check-functionality', 'Check the system runs correctly on the disk' ) do 
+     options[:check_functionality] = true
    end
    opts.on( '--block-size NUM', Integer, 'Block size (byte) (in log2)' ) do |size|
      options[:block_size] = size
@@ -85,7 +89,7 @@ write_data_gen          = options[:write_data]
 run_benchmark           = options[:test]
 test_type               = options[:test]
 if run_benchmark
-  raise ArgumentError, "test \"#{test_type}\" does not exist" unless SpStore::Benchmark::SyntheticBenchmark.method_defined? test_type
+  raise ArgumentError, "test \"#{test_type}\" does not exist" unless SpStore::Benchmark::SyntheticBenchmark.benchmark_list.include? test_type
 end
 
 ################ helper functions ############################
@@ -99,10 +103,11 @@ end
 ################ detailed timing analysis ####################
 
 if options[:detailed_time]
-  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :read_block )
-  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :write_block )
-  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :read_block )
-  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :write_block )
+  File.delete options[:detailed_time] if File.exist? options[:detailed_time]
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :read_block, options[:detailed_time] )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Server::Controller, :write_block, options[:detailed_time] )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :read_block, options[:detailed_time] )
+  SpStore::Benchmark::DetailTiming.setup( SpStore::Mocks::BareController::Session, :write_block, options[:detailed_time] )
 end
 
 ################ tree cache hit rate analysis ################
@@ -110,7 +115,7 @@ end
 measure_node_hit_rate = options[:node_hit_rate] || options[:node_hit_rate_detail]
 
 if measure_node_hit_rate
-  SpStore::Benchmark::NodeCacheHitRate.calculate_hit_rate options[:node_hit_rate_detail] 
+  SpStore::Benchmark::NodeCacheHitRate.calculate_hit_rate options[:node_hit_rate_detail]
 end
 
 #################### initialization ##########################
@@ -130,20 +135,25 @@ measure_time do
   puts "Initialization time for mock store (secs):"
 end
 
-############### Benchmark Test Setup ########################
-
-benchmark = SpStore::Benchmark::SyntheticBenchmark.new block_size, block_count, measure_node_hit_rate,
-                     SpStore::Benchmark::StoreSetup.disk_directory, sp_store_controller, bare_controller
-
 # pre-generate write data
 measure_time do
-  benchmark.generate_write_data_file
+  SpStore::Benchmark::StoreSetup.generate_write_data_file block_size, block_count
   puts "Write data pre-generation (secs):"
 end if write_data_gen
 
+
+############### Benchmark Configuration ########################
+
+benchmark_config = SpStore::Benchmark::BenchmarkConfig.new block_size, block_count, measure_node_hit_rate, options[:detailed_time], 
+                                                           SpStore::Benchmark::StoreSetup.disk_directory, sp_store_controller, bare_controller
+
+################### Check Functionality #####################
+
+SpStore::Benchmark::CheckFunctionality.run benchmark_config if options[:check_functionality]
+
 ################### Running Benchmark #######################
 
-eval "benchmark.#{test_type}" if run_benchmark
+SpStore::Benchmark::SyntheticBenchmark.run_test( test_type, benchmark_config ) if run_benchmark
 
 ################### Delete Existing Store ###################
 

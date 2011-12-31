@@ -1,49 +1,98 @@
-require 'openssl'
-
 # :nodoc: namespace
 module SpStore 
   
 # :nodoc: namespace
 module Benchmark
-  
-# generates access patterns for benchmarking
-class SyntheticBenchmark
-  def initialize( block_size, block_count, node_hit_rate = false, disk_directory, sp_controller, bare_controller )
-    @block_size       = block_size
-    @block_count      = block_count
-    @node_hit_rate    = node_hit_rate
-    @write_disk_path  = File.join( disk_directory, "sp_store_write_data" )
-    @sp_controller    = sp_controller
-    @bare_controller  = bare_controller
-    @node_cache_reset = true
+
+# run synthetic benchmarking
+module SyntheticBenchmark
+
+  def self.benchmark_list
+    [ "read_only_cont",
+      "read_only_period",
+      "read_only_random",
+      "write_only_cont",
+      "write_only_period",
+      "write_only_random",
+      "random_read_write",
+      "test_all"  ]
   end
-  
-  # print node cache hit rate results then reset
-  def output_node_hit_rate
-    cache_controller = @sp_controller.instance_variable_get(:@hash_tree_controller)
-    node_to_load     = cache_controller.total_node_to_load
-    node_needed      = cache_controller.total_node_needed
-    puts "node cache hit rate = 1 - #{node_to_load}/#{node_needed} = #{(1-node_to_load.to_f/node_needed)*100}%"
-    cache_controller.reset_hit_info
-  end
-  
-  # generates random data for write testing
-  def generate_write_data_file
-    #initialize disk
-    Dir.mkdir(@write_disk_path, 0777) unless Dir.exist? @write_disk_path
-    #initialize disk data
-    File.open(disk_data_file(@write_disk_path), 'wb') do |file|
-      (0...@block_count).each do
-         file.write OpenSSL::Random.random_bytes(@block_size)
+
+  def self.run_test(test, bmconfig)
+    if test == "test_all"
+      run_test_all bmconfig
+      return
+    end    
+    if test =~ /random/
+      if test =~ /write_only/
+        read_prob = 0.0 
+      elsif test =~ /read_only/
+        read_prob = 1.0
+      else
+        read_prob = 0.5
       end
+      bm = RandomAccess.new bmconfig, read_prob 
+    else
+      classname = test.gsub(/^.|(_.)/) {|s| s.upcase[-1,1]}
+      clazz = Kernel.const_get("SpStore").const_get("Benchmark").const_get("SyntheticBenchmark").const_get(classname)
+      bm = clazz.new bmconfig
+    end
+    bm.run   
+  end
+  
+  def self.run_test_all(bmconfig)
+    benchmark_list[0...-1].each do |bm_name|
+      run_test(bm_name, bmconfig)
+    end
+  end
+
+# generates access patterns for benchmarking
+# base class
+class SyntheticBenchmarkBase
+  # store benchmark configurations and test iteration times 
+  def initialize( bmconfig, iter_num = 1 )
+    @bmconfig      = bmconfig
+    @test_iter_num = iter_num
+  end
+
+  # should be overwritten by subclasses
+  def benchmark_header
+    "\nRunning test:"
+  end
+  
+  def run
+    output_detail_timing_info benchmark_header if @bmconfig.detailed_timing
+    puts benchmark_header
+    run_with_controller "bare_controller" 
+    run_with_controller "sp_controller"
+    save_hashes_for_write
+  end
+   
+  def output_detail_timing_info(info)
+    File.open(@bmconfig.detailed_timing, "a") do |dfile|
+      dfile.puts info
     end
   end
   
-  # Path to write_data file
-  def disk_data_file(disk_path)
-     File.join disk_path, 'write_data'
-  end
-
+  def run_with_controller(controller_type)
+    puts "For #{controller_type}:"
+    session = create_session @bmconfig.instance_variable_get("@#{controller_type}")
+    (0...@test_iter_num).each do
+      output_detail_timing_info "For #{controller_type}:" if @bmconfig.detailed_timing
+      if controller_type == "sp_controller"
+        @bmconfig.sp_controller.reset_node_cache unless @bmconfig.node_cache_reset
+      end
+      reset_random_seed
+      measure_time do
+        run_one_test session
+      end
+      if controller_type == "sp_controller"
+        output_node_hit_rate if @bmconfig.node_hit_rate
+        @bmconfig.node_cache_reset = false
+      end
+    end
+  end 
+  
   # initialize session
   def create_session(controller)
     ecert         = controller.endorsement_certificate
@@ -51,261 +100,152 @@ class SyntheticBenchmark
     encrypted_key = SpStore::Crypto.pki_encrypt ecert.public_key, session_key
     controller.session encrypted_key
   end
-  
-  # initialize session with given hmac key
-  def create_session_with_key(controller, key)
-    ecert         = controller.endorsement_certificate
-    encrypted_key = SpStore::Crypto.pki_encrypt ecert.public_key, key
-    controller.session encrypted_key
-  end
-
-  # run all benchmarks
-  def test_all
-    read_only_cont
-    read_only_period
-    read_only_random
-    write_only_cont
-    write_only_period
-    write_only_random
-    random_read_write    
-  end
-
-  # benchmark test: check functionality 
-  def check_functionality
-    puts "Running test: check program functionality"
-    session_key  = SpStore::Crypto.hmac_key
-    session1     = create_session_with_key @bare_controller, session_key
-    session2     = create_session_with_key @sp_controller, session_key
-    r = Random.new(1100)
-    p = 0.5
-    File.open(disk_data_file(@write_disk_path), 'rb') do |file|     
-      (0...@block_count).each do
-        is_read  = r.rand < p
-        block_id = r.rand(@block_count)
-        nonce    = SpStore::Crypto.nonce
-        if is_read         
-          data1, hmac1 = session1.read_block block_id, nonce
-          data2, hmac2 = session2.read_block block_id, nonce
-          golden_bare_hmac = SpStore::Crypto.hmac_for_block(block_id, data1, nonce, session_key)
-          golden_sp_hmac   = SpStore::Crypto.hmac_for_block(block_id+@block_count, data2, nonce, session_key)          
-          raise RuntimeError, "read block #{block_id} failed" unless data1 == data2 && hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
-        else
-          file.seek(block_id*@block_size, IO::SEEK_SET)
-          write_data = file.read(@block_size)
-          hmac1 = session1.write_block block_id, write_data, nonce
-          hmac2 = session2.write_block block_id, write_data, nonce
-          golden_bare_hmac = SpStore::Crypto.hmac_for_block(block_id, write_data, nonce, session_key)
-          golden_sp_hmac   = SpStore::Crypto.hmac_for_block(block_id+@block_count, write_data, nonce, session_key)   
-          raise RuntimeError, "write block #{block_id} failed" unless hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
-        end
-      end
-    end
-    puts "Functionality Correct!"
-    @bare_controller.save_hashes
-    @sp_controller.save_hashes
-  end 
-
-  # benchmark test: read whole disk continuously 
-  def read_only_cont
-    puts "Running test: read whole disk continuously"
-    iter_num     = 2
-    puts "For bare controller:"
-    session = create_session @bare_controller
-    (0...iter_num).each do
-      measure_time do
-        (0...@block_count).each do |block_id|
-          session.read_block block_id, SpStore::Crypto.nonce
-        end
-      end
-    end
-    puts "For sp_store controller:"
-    session = create_session @sp_controller
-    (0...iter_num).each do
-      @sp_controller.reset_node_cache unless @node_cache_reset 
-      measure_time do
-        (0...@block_count).each do |block_id|
-          session.read_block block_id, SpStore::Crypto.nonce
-        end
-      end
-      output_node_hit_rate if @node_hit_rate
-      @node_cache_reset = false
-    end
-  end 
-
-  # benchmark test: read a chunk of data periodically
-  def read_only_period
-    puts "Running test: read a chunk of data periodically"
-    iter_num     = 2**5
-    chunk_length = 2**6
-    puts "For bare controller:"
-    session = create_session @bare_controller
-    measure_time do
-      (0...iter_num).each do
-         (0...chunk_length).each do |block_id|
-           session.read_block block_id, SpStore::Crypto.nonce
-         end
-      end
-    end  
-    puts "For sp_store controller:"
-    session = create_session @sp_controller
-    @sp_controller.reset_node_cache unless @node_cache_reset 
-    measure_time do
-      (0...iter_num).each do
-         (0...chunk_length).each do |block_id|
-           session.read_block block_id, SpStore::Crypto.nonce
-         end
-      end
-    end
-    output_node_hit_rate if @node_hit_rate
-    @node_cache_reset = false
-  end 
-
-
-  # benchmark test: write whole disk continuously   
-  def write_only_cont
-    puts "Running test: write whole disk continuously"
-    iter_num     = 2
     
-    File.open(disk_data_file(@write_disk_path), 'rb') do |file|
-        
-      puts "For bare controller:"
-      session = create_session @bare_controller
-      (0...iter_num).each do
-        measure_time do
-          (0...@block_count).each do |block_id|
-            file.seek(block_id*@block_size, IO::SEEK_SET)
-            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-          end
-        end
-      end
-      @bare_controller.save_hashes
-
-      puts "For sp_store controller:"
-      session = create_session @sp_controller
-      (0...iter_num).each do
-        @sp_controller.reset_node_cache unless @node_cache_reset
-        measure_time do
-          (0...@block_count).each do |block_id|
-            file.seek(block_id*@block_size, IO::SEEK_SET)
-            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-          end
-        end
-        output_node_hit_rate if @node_hit_rate
-        @node_cache_reset = false
-      end
-      # save hash_tree
-      @sp_controller.save_hashes     
-
-    end
-  end
-  
-  # benchmark test: write a chunk of data periodically
-  def write_only_period
-    puts "Running test: write a chunk of data periodically"
-    iter_num     = 2**5
-    chunk_length = 2**6
+  # should be overwritten by subclasses
+  def run_one_test(session)
     
-    File.open(disk_data_file(@write_disk_path), 'rb') do |file|
-        
-      puts "For bare controller:"
+  end
 
-      session = create_session @bare_controller
-      measure_time do
-        (0...iter_num).each do
-          (0...chunk_length).each do |block_id|
-            file.seek(block_id*@block_size, IO::SEEK_SET)
-            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-          end
-        end
-      end
-      @bare_controller.save_hashes
-      
-      puts "For sp_store controller:"
-      session = create_session @sp_controller
-      @sp_controller.reset_node_cache unless @node_cache_reset
-      measure_time do
-        (0...iter_num).each do
-          (0...chunk_length).each do |block_id|
-            file.seek(block_id*@block_size, IO::SEEK_SET)
-            session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-          end
-        end
-      end
-      output_node_hit_rate if @node_hit_rate
-      @node_cache_reset = false
-      # save hash_tree
-      @sp_controller.save_hashes
-    end
-  end  
+  # remain empty for read only benchmarks  
+  def save_hashes_for_write
+    
+  end
+
+  # remain empty for non-random benchmarks  
+  def reset_random_seed
+    
+  end
   
-  # benchmark test: read randomly chosen blocks
-  def read_only_random
-    puts "Running test: randomly read data blocks"
-    random_read_write(1.0)
-  end
-
-  # benchmark test: write randomly chosen blocks
-  def write_only_random
-    puts "Running test: randomly write data blocks"
-    random_read_write(0.0)    
-  end
-
-  # benchmark test: randomly read or write (with read probability = p )
-  def random_read_write(p = 0.5)
-    puts "Running test: randomly read and write data blocks"
-    iter_num = 2
-    seed     = 123
-    File.open(disk_data_file(@write_disk_path), 'rb') do |file|        
-      puts "For bare controller:"
-      session = create_session @bare_controller
-      (0...iter_num).each do
-        r = Random.new(seed)
-        measure_time do
-          (0...@block_count).each do
-            is_read  = r.rand < p
-            block_id = r.rand(@block_count)
-            if is_read
-              session.read_block block_id, SpStore::Crypto.nonce
-            else
-              file.seek(block_id*@block_size, IO::SEEK_SET)
-              session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-            end
-          end
-        end
-      end
-      @bare_controller.save_hashes
-      
-      puts "For sp_store controller:"
-      session = create_session @sp_controller
-      (0...iter_num).each do
-        r = Random.new(seed)
-        @sp_controller.reset_node_cache unless @node_cache_reset
-        measure_time do
-          (0...@block_count).each do
-            is_read  = r.rand < p
-            block_id = r.rand(@block_count)
-            if is_read
-              session.read_block block_id, SpStore::Crypto.nonce
-            else
-              file.seek(block_id*@block_size, IO::SEEK_SET)
-              session.write_block block_id, file.read(@block_size), SpStore::Crypto.nonce
-            end
-          end
-        end
-        output_node_hit_rate if @node_hit_rate
-        @node_cache_reset = false
-      end
-      # save hash_tree
-      @sp_controller.save_hashes
-    end
-  end  
-
   # measures execution time
   def measure_time 
     start = Time.now
     yield
     puts "Execution time (secs): #{Time.now-start}"
+  end  
+  
+  # print node cache hit rate results then reset
+  def output_node_hit_rate
+    cache_controller = @bmconfig.sp_controller.instance_variable_get(:@hash_tree_controller)
+    node_to_load     = cache_controller.total_node_to_load
+    node_needed      = cache_controller.total_node_needed
+    puts "node cache hit rate = 1 - #{node_to_load}/#{node_needed} = #{(1-node_to_load.to_f/node_needed)*100}%"
+    cache_controller.reset_hit_info
+  end  
+  
+end # namespace SpStore::Benchmark::SyntheticBenchmark::SyntheticBenchmarkBase
+
+class ReadOnlyCont < SyntheticBenchmarkBase
+  def initialize( bmconfig, iter_num = 2 )
+    @bmconfig      = bmconfig
+    @test_iter_num = iter_num
   end
+  def benchmark_header
+    super+" read whole disk continuously"
+  end
+  def run_one_test(session)
+    (0... @bmconfig.block_count).each do |block_id|
+      session.read_block block_id, SpStore::Crypto.nonce
+    end
+  end
+end # namespace SpStore::Benchmark::SyntheticBenchmark::ReadOnlyCont
+
+class ReadOnlyPeriod < SyntheticBenchmarkBase
+  def benchmark_header
+    super+" read a chunk of data periodically"
+  end
+  def run_one_test(session)
+    iter_num     = 2**5
+    chunk_length = 2**6
+    (0...iter_num).each do
+       (0...chunk_length).each do |block_id|
+         session.read_block block_id, SpStore::Crypto.nonce
+       end
+    end
+  end
+end # namespace SpStore::Benchmark::SyntheticBenchmark::ReadOnlyPeriod
+
+class WriteOnlyCont < SyntheticBenchmarkBase
+  def initialize( bmconfig, iter_num = 2 )
+    @bmconfig      = bmconfig
+    @test_iter_num = iter_num
+  end
+  def benchmark_header
+    super+" write whole disk continuously"
+  end
+  def run_one_test(session)
+    File.open(@bmconfig.disk_data_file, 'rb') do |file|
+      (0... @bmconfig.block_count).each do |block_id|
+         file.seek(block_id*@bmconfig.block_size, IO::SEEK_SET)
+         session.write_block block_id, file.read(@bmconfig.block_size), SpStore::Crypto.nonce
+      end
+    end
+  end
+  def save_hashes_for_write
+    @bmconfig.bare_controller.save_hashes
+    @bmconfig.sp_controller.save_hashes 
+  end  
+end # namespace SpStore::Benchmark::SyntheticBenchmark::WriteOnlyCont
+
+class WriteOnlyPeriod < SyntheticBenchmarkBase
+  def benchmark_header
+    super+" write a chunk of data periodically"
+  end
+  def run_one_test(session)
+    iter_num     = 2**5
+    chunk_length = 2**6   
+    File.open(@bmconfig.disk_data_file, 'rb') do |file|
+      (0...iter_num).each do
+         (0...chunk_length).each do |block_id|
+           file.seek(block_id*@bmconfig.block_size, IO::SEEK_SET)
+           session.write_block block_id, file.read(@bmconfig.block_size), SpStore::Crypto.nonce
+         end
+      end    
+    end
+  end
+  def save_hashes_for_write
+    @bmconfig.bare_controller.save_hashes
+    @bmconfig.sp_controller.save_hashes 
+  end  
+end # namespace SpStore::Benchmark::SyntheticBenchmark::WriteOnlyPeriod
+
+class RandomAccess < SyntheticBenchmarkBase
+  def initialize( bmconfig, read_prob = 0.5, iter_num = 2 )
+    @bmconfig      = bmconfig
+    @test_iter_num = iter_num
+    @read_prob     = read_prob
+    @seed          = 1223
+  end
+  def benchmark_header
+    if @read_prob == 0.0
+      super+" randomly write data blocks"       
+    elsif @read_prob == 1.0
+      super+" randomly read data blocks"
+    else
+      super+" randomly read and write data blocks"    
+    end
+  end
+  def run_one_test(session)
+    File.open(@bmconfig.disk_data_file, 'rb') do |file|
+      (0...@bmconfig.block_count).each do
+        is_read  = @rng.rand < @read_prob
+        block_id = @rng.rand(@bmconfig.block_count)
+        if is_read
+          session.read_block block_id, SpStore::Crypto.nonce
+        else
+          file.seek(block_id*@bmconfig.block_size, IO::SEEK_SET)
+          session.write_block block_id, file.read(@bmconfig.block_size), SpStore::Crypto.nonce
+        end
+      end
+    end
+  end
+  def save_hashes_for_write
+    @bmconfig.bare_controller.save_hashes
+    @bmconfig.sp_controller.save_hashes
+  end
+  def reset_random_seed
+    @rng = Random.new(@seed)
+  end
+end # namespace SpStore::Benchmark::SyntheticBenchmark::RandomAccess
 
 end # namespace SpStore::Benchmark::SyntheticBenchmark
 
