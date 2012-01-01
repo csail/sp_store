@@ -25,18 +25,21 @@ class SoftPChip
     @boot_logic = SpStore::PChip::SoftBootLogic.new p_key, ca_public_key, self
     @session_cache = nil
     @node_cache = nil
+    @hash_engine = nil
     @boot_logic.reset
   end
   
   attr_reader :boot_logic
   attr_reader :session_cache
   attr_reader :node_cache
+  attr_reader :hash_engine
   
   # :nodoc: called by boot logic
   def reset
     @session_cache = SpStore::PChip::SoftSessionCache.new @session_cache_size
-    @node_cache = SpStore::PChip::SoftNodeCache.new @node_cache_size,
-                                                    @node_count, @session_cache
+    @node_cache    = SpStore::PChip::SoftNodeCache.new @node_cache_size,
+                                                       @node_count, @session_cache
+    @hash_engine   = SpStore::PChip::SoftHashEngine.new
   end
   
   # :nodoc: called by boot logic, arguments never leave the chip
@@ -44,10 +47,7 @@ class SoftPChip
     @node_cache.set_root_hash root_hash
     @session_cache.set_endorsement_key endorsement_key
   end
-  
-  def hash_block(data)
-    Crypto.crypto_hash data
-  end
+
 end  # class SpStore::Mocks::SoftPChip
   
 end  # namespace SpStore::Mocks

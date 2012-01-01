@@ -64,7 +64,7 @@ class Controller
     _check_block_id block_id
     session_cache_entry = @allocator.session_cache_entry session_id
     @storage.write_block block_id, data
-    data_hash = @p.hash_block data
+    data_hash = @p.hash_engine.hash_block data
     @hash_tree_controller.sign_write_block block_id, data_hash, session_cache_entry, nonce
   end
   

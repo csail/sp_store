@@ -8,7 +8,7 @@ module Benchmark
 # initialize store controllers for benchmarking
 module StoreSetup
     
-  def StoreSetup.sp_store_controller( block_size, block_count, node_cache_size, session_cache_size, load_store = false, mock_p_chip = true )
+  def StoreSetup.sp_store_controller( block_size, block_count, node_cache_size, session_cache_size, load_store = false, mock_p_chip = true, soft_hash_engine = false )
     
     # keys & certificate initialization
     p_key             = SpStore::Crypto.sk_key
@@ -41,7 +41,8 @@ module StoreSetup
     else
        # hardware p_chip interface initialization
        p_chip         = SpStore::PChip::HardPChip.new p_key, ca_keys[:public], :cache_size => node_cache_size, 
-                                                      :capacity => block_count, :session_cache_size => session_cache_size
+                                                      :capacity => block_count, :session_cache_size => session_cache_size,
+                                                      :soft_hash_engine => soft_hash_engine
     end
 
     # ethernet controller initialization

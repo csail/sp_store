@@ -22,6 +22,7 @@ class HardPChip
     @session_cache_size = options[:session_cache_size]
     @node_cache_size = options[:cache_size]
     @node_count = options[:capacity]
+    @soft_hash_engine = options[:soft_hash_engine]
     @boot_logic = SpStore::PChip::SoftBootLogic.new p_key, ca_public_key, self
     @session_cache = nil
     @node_cache = nil
@@ -39,7 +40,7 @@ class HardPChip
     @session_cache = SpStore::PChip::SoftSessionCache.new @session_cache_size
     @node_cache    = SpStore::PChip::HardNodeCache.new @node_cache_size,
                                                        @node_count, @session_cache
-    @hash_engine   = SpStore::PChip::HardHashEngine.new                                                    
+    @hash_engine   = @soft_hash_engine ? SpStore::PChip::SoftHashEngine.new : SpStore::PChip::HardHashEngine.new
   end
   
   # :nodoc: called by boot logic, arguments never leave the chip
@@ -48,19 +49,14 @@ class HardPChip
     @session_cache.set_endorsement_key endorsement_key
   end
   
-  # calls FPGA's hash engine to hash data blocks
-  def hash_block(data)
-    @hash_engine.hash_block data
-  end
-  
   # passes the connected connection to node_cache & hash_engine
   def set_connection(connector)
     @node_cache.set_connection connector
-    @hash_engine.set_connection connector    
+    @hash_engine.set_connection connector unless @soft_hash_engine
   end
   
 end  # class SpStore::PChip::HardPChip
   
-end  # namespace SpStore::Mocks
+end  # namespace SpStore::PChip
   
 end  # namespace SpStore

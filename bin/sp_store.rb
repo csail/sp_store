@@ -32,6 +32,10 @@ session_cache_size      = 64
    opts.on( '--mock-p', 'Use mock P chip for testing' ) do
      options[:mock_p] = true
    end
+   options[:soft_hash_engine] = false   
+   opts.on( '--soft-hash-engine', 'Use software implemented hash engine' ) do
+     options[:soft_hash_engine] = true
+   end   
    options[:write_data] = false   
    opts.on( '--write-data', 'Pre-generate random bytes for block write' ) do
      options[:write_data] = true
@@ -80,6 +84,7 @@ node_cache_size         = 2**options[:cache_size]  if options[:cache_size]  && o
 
 load_store              = !options[:init]
 delete_store            = options[:delete]
+soft_hash_engine        = options[:soft_hash_engine]
 
 # choose between mock or real p_chip 
 mock_p_chip             = options[:mock_p]
@@ -124,7 +129,7 @@ end
 sp_store_controller   = nil
 measure_time do
   sp_store_controller = SpStore::Benchmark::StoreSetup.sp_store_controller( block_size, block_count, 
-                        node_cache_size, session_cache_size, load_store, mock_p_chip )
+                        node_cache_size, session_cache_size, load_store, mock_p_chip, soft_hash_engine )
   puts "Initialization time for sp store (secs):"
 end
 
