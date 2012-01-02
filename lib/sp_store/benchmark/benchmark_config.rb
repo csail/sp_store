@@ -19,7 +19,7 @@ class BenchmarkConfig
     @bare_controller  = bare_controller
     @node_cache_reset = true
   end
-  attr_reader :block_size, :block_count, :node_hit_rate, :detailed_timing, :write_disk_path, :disk_data_file, :sp_controller, :bare_controller
+  attr_reader :block_size, :block_count, :node_hit_rate, :detailed_timing, :test_iter, :write_disk_path, :disk_data_file, :sp_controller, :bare_controller
   attr_accessor :node_cache_reset
 
 
