@@ -7,11 +7,12 @@ module Benchmark
   
 class BenchmarkConfig
 
-  def initialize( block_size, block_count, node_hit_rate = false, detailed_timing = false, disk_directory, sp_controller, bare_controller )
+  def initialize( block_size, block_count, node_hit_rate = false, detailed_timing = false, test_iter, disk_directory, sp_controller, bare_controller )
     @block_size       = block_size
     @block_count      = block_count
     @node_hit_rate    = node_hit_rate
-    @detailed_timing  = detailed_timing    
+    @detailed_timing  = detailed_timing
+    @test_iter        = test_iter    
     @write_disk_path  = File.join( disk_directory, "sp_store_write_data" )
     @disk_data_file   = File.join @write_disk_path, "write_data"
     @sp_controller    = sp_controller

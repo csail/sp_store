@@ -31,11 +31,19 @@ module SyntheticBenchmark
       else
         read_prob = 0.5
       end
-      bm = RandomAccess.new bmconfig, read_prob 
+      if bmconfig.test_iter
+        bm = RandomAccess.new bmconfig, read_prob, bmconfig.test_iter
+      else
+        bm = RandomAccess.new bmconfig, read_prob 
+      end
     else
       classname = test.gsub(/^.|(_.)/) {|s| s.upcase[-1,1]}
       clazz = Kernel.const_get("SpStore").const_get("Benchmark").const_get("SyntheticBenchmark").const_get(classname)
-      bm = clazz.new bmconfig
+      if bmconfig.test_iter
+        bm = clazz.new bmconfig, bmconfig.test_iter
+      else
+        bm = clazz.new bmconfig
+      end
     end
     bm.run   
   end

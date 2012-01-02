@@ -56,6 +56,10 @@ session_cache_size      = 64
    opts.on( '-t', '--test TEST-NAME', 'Run benchmark TEST-NAME' ) do |test_type|
      options[:test] = test_type
    end
+   options[:test_iter] = nil
+   opts.on( '--test-iter TEST-TIMES', 'Run benchmark TEST-TIMES' ) do |test_iter|
+     options[:test_iter] = test_iter
+   end   
    options[:check_functionality] = false   
    opts.on( '--check-functionality', 'Check the system runs correctly on the disk' ) do 
      options[:check_functionality] = true
@@ -149,7 +153,7 @@ end if write_data_gen
 
 ############### Benchmark Configuration ########################
 
-benchmark_config = SpStore::Benchmark::BenchmarkConfig.new block_size, block_count, measure_node_hit_rate, options[:detailed_time], 
+benchmark_config = SpStore::Benchmark::BenchmarkConfig.new block_size, block_count, measure_node_hit_rate, options[:detailed_time], options[:test_iter],
                                                            SpStore::Benchmark::StoreSetup.disk_directory, sp_store_controller, bare_controller
 
 ################### Check Functionality #####################
