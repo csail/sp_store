@@ -62,20 +62,22 @@ module StoreSetup
         cache_root_node
       end
     end
+    SpStore::PChip::HardNodeCache.class_eval do
+      def reset
+        command = [11].pack('C')
+        @connector.send command
+        ack = @connector.receive
+        raise RuntimeError, "Node Cache Reset Failed" unless ack == [255,255].pack('CC')
+      end
+    end    
     SpStore::Server::Controller.class_eval do
       define_method :reset_node_cache do
-        unless mock_p_chip
-          puts "Reset p_chip's node cache: "
-          loop do
-            response = gets.chomp
-            break if response == "y" || response == "yes"
-          end
-        end
+        @p.node_cache.reset unless mock_p_chip
         root_hash = @hash_tree_controller.node_hashes[1]
         @p.node_cache.set_root_hash(root_hash)
         @hash_tree_controller.reset_cache
       end
-    end          
+    end
     controller
   end
 
