@@ -66,8 +66,8 @@ module StoreSetup
       def reset
         command = [11].pack('C')
         @connector.send command
-        ack = @connector.receive
-        raise RuntimeError, "Node Cache Reset Failed" unless ack == [255,255].pack('CC')
+        ack = @connector.receive[0,2]
+        raise RuntimeError, "Node Cache Reset Failed" unless ack == [0,255].pack('CC')
       end
     end    
     SpStore::Server::Controller.class_eval do

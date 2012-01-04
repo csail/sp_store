@@ -82,11 +82,17 @@ session_cache_size      = 64
 
 ##################  options setting  ########################
 
-block_size              = 2**options[:block_size]  if options[:block_size]  && options[:init] && options[:block_size]!= 0
-block_count             = 2**options[:block_count] if options[:block_count] && options[:init] && options[:block_count]!= 0
+block_size              = 2**options[:block_size]  if options[:block_size]  && options[:block_size]!= 0
+block_count             = 2**options[:block_count] if options[:block_count] && options[:block_count]!= 0
 node_cache_size         = 2**options[:cache_size]  if options[:cache_size]  && options[:cache_size]!= 0
 
 load_store              = !options[:init]
+# load store properties
+if load_store
+  block_size            = SpStore::Storage::DiskStore.load_store.block_size unless options[:block_size]
+  block_count           = SpStore::Storage::DiskStore.load_store.blocks unless options[:block_count]
+end
+
 delete_store            = options[:delete]
 soft_hash_engine        = options[:soft_hash_engine]
 
@@ -107,6 +113,20 @@ def measure_time
   start = Time.now
   yield
   puts ( Time.now - start )
+end
+
+def display_size(size)
+  display = nil
+  if size>>10 == 0
+    display = "#{size}B"
+  elsif size>>20 == 0
+    display = "#{size>>10}kB"
+  elsif size>>30 == 0
+    display = "#{size>>20}MB"
+  else
+    display = "#{size>>30}GB"
+  end
+  display
 end
 
 ################ detailed timing analysis ####################
@@ -130,6 +150,11 @@ end
 #################### initialization ##########################
 
 # initialize sp_store controller
+puts "Initializing SP Store..."
+puts " Disk  Size: #{display_size(block_size*block_count)}"
+puts "Block  Size: #{display_size(block_size)}"
+puts "Block Count: #{block_count}"
+
 sp_store_controller   = nil
 measure_time do
   sp_store_controller = SpStore::Benchmark::StoreSetup.sp_store_controller( block_size, block_count, 

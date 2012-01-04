@@ -161,9 +161,9 @@ class ReadOnlyPeriod < SyntheticBenchmarkBase
   def benchmark_header
     super+" read a chunk of data periodically"
   end
-  def run_one_test(session)
-    iter_num     = 2**5
-    chunk_length = 2**6
+  def run_one_test(session)    
+    iter_num     = 1<<5
+    chunk_length = ( (1<<6)*((1<<20).to_f/@bmconfig.block_size) ).to_i
     (0...iter_num).each do
        (0...chunk_length).each do |block_id|
          session.read_block block_id, SpStore::Crypto.nonce
@@ -199,8 +199,8 @@ class WriteOnlyPeriod < SyntheticBenchmarkBase
     super+" write a chunk of data periodically"
   end
   def run_one_test(session)
-    iter_num     = 2**5
-    chunk_length = 2**6   
+    iter_num     = 1<<5
+    chunk_length = ( (1<<6)*((1<<20).to_f/@bmconfig.block_size) ).to_i
     File.open(@bmconfig.disk_data_file, 'rb') do |file|
       (0...iter_num).each do
          (0...chunk_length).each do |block_id|
