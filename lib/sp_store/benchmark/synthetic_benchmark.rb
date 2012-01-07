@@ -233,15 +233,20 @@ class RandomAccess < SyntheticBenchmarkBase
     end
   end
   def run_one_test(session)
+    random_access_size = 1<<20
+    blocks_per_access  = random_access_size/@bmconfig.block_size
+    blocks_per_access  = 1 if blocks_per_access == 0
     File.open(@bmconfig.disk_data_file, 'rb') do |file|
-      (0...@bmconfig.block_count).each do
+      (0...((@bmconfig.block_count)/blocks_per_access)).each do
         is_read  = @rng.rand < @read_prob
-        block_id = @rng.rand(@bmconfig.block_count)
+        block_id = @rng.rand(@bmconfig.block_count-blocks_per_access+1)
         if is_read
-          session.read_block block_id, SpStore::Crypto.nonce
+          (0...blocks_per_access).each { |inc| session.read_block block_id+inc, SpStore::Crypto.nonce }
         else
-          file.seek(block_id*@bmconfig.block_size, IO::SEEK_SET)
-          session.write_block block_id, file.read(@bmconfig.block_size), SpStore::Crypto.nonce
+          (0...blocks_per_access).each do |inc|
+            file.seek((block_id+inc)*@bmconfig.block_size, IO::SEEK_SET)
+            session.write_block block_id+inc, file.read(@bmconfig.block_size), SpStore::Crypto.nonce
+          end
         end
       end
     end
