@@ -32,7 +32,15 @@ module CheckFunctionality
           data2, hmac2 = session2.read_block block_id, nonce
           golden_bare_hmac = SpStore::Crypto.hmac_for_block(block_id, data1, nonce, session_key)
           golden_sp_hmac   = SpStore::Crypto.hmac_for_block(block_id+bmconfig.block_count, data2, nonce, session_key)          
-          raise RuntimeError, "read block #{block_id} failed" unless data1 == data2 && hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
+          begin
+            raise RuntimeError, "read block #{block_id} failed" unless data1 == data2 && hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
+            rescue 
+              puts "read block #{block_id} failed"
+              puts hmac1.unpack('H*').first
+              puts golden_bare_hmac.unpack('H*').first
+              puts hmac2.unpack('H*').first
+              puts golden_sp_hmac.unpack('H*').first
+          end
         else
           file.seek(block_id*bmconfig.block_size, IO::SEEK_SET)
           write_data = file.read(bmconfig.block_size)
@@ -40,7 +48,15 @@ module CheckFunctionality
           hmac2 = session2.write_block block_id, write_data, nonce
           golden_bare_hmac = SpStore::Crypto.hmac_for_block(block_id, write_data, nonce, session_key)
           golden_sp_hmac   = SpStore::Crypto.hmac_for_block(block_id+bmconfig.block_count, write_data, nonce, session_key)   
-          raise RuntimeError, "write block #{block_id} failed" unless hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
+          begin
+            raise RuntimeError, "write block #{block_id} failed" unless hmac1 == golden_bare_hmac && hmac2 == golden_sp_hmac
+            rescue
+              puts "write block #{block_id} failed"
+              puts hmac1.unpack('H*').first
+              puts golden_bare_hmac.unpack('H*').first
+              puts hmac2.unpack('H*').first
+              puts golden_sp_hmac.unpack('H*').first
+          end
         end
       end
     end
