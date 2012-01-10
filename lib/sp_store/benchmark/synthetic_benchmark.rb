@@ -85,12 +85,12 @@ class SyntheticBenchmarkBase
   def run_with_controller(controller_type)
     puts "For #{controller_type}:"
     session = create_session @bmconfig.instance_variable_get("@#{controller_type}")
-    (0...@test_iter_num).each do
+    (0...@test_iter_num).each do |iter_id|
       output_detail_timing_info "For #{controller_type}:" if @bmconfig.detailed_timing
       if controller_type == "sp_controller"
         @bmconfig.sp_controller.reset_node_cache unless @bmconfig.node_cache_reset
       end
-      reset_random_seed
+      reset_random_seed iter_id
       measure_time do
         run_one_test session
       end
@@ -120,7 +120,7 @@ class SyntheticBenchmarkBase
   end
 
   # remain empty for non-random benchmarks  
-  def reset_random_seed
+  def reset_random_seed(iter)
     
   end
   
@@ -255,8 +255,8 @@ class RandomAccess < SyntheticBenchmarkBase
     @bmconfig.bare_controller.save_hashes
     @bmconfig.sp_controller.save_hashes
   end
-  def reset_random_seed
-    @rng = Random.new(@seed)
+  def reset_random_seed(iter)
+    @rng = Random.new(@seed+iter)
   end
 end # namespace SpStore::Benchmark::SyntheticBenchmark::RandomAccess
 
